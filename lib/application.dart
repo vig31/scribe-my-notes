@@ -1,3 +1,4 @@
+import 'package:appflowy_editor/appflowy_editor.dart';
 import 'package:flutter/material.dart';
 
 import 'pages/crerateAndEditPage/createAndEditPage.view.dart';
@@ -9,20 +10,16 @@ class Application extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Directionality(
-      textDirection: TextDirection.ltr,
-      child: Banner(
-        location: BannerLocation.topEnd,
-        message: 'DEV',
-        child: MaterialApp(
-          debugShowCheckedModeBanner: false,
-          theme: lightTheme,
-          darkTheme: darkTheme,
-          themeMode: ThemeMode.system,
-          initialRoute: "/create",
-          onGenerateRoute: onGenrateRoute,
-        ),
-      ),
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      theme: lightTheme,
+      darkTheme: darkTheme,
+      themeMode: ThemeMode.system,
+      initialRoute: "/create",
+      onGenerateRoute: onGenrateRoute,
+      localizationsDelegates: const [
+        AppFlowyEditorLocalizations.delegate,
+      ],
     );
   }
 }
@@ -35,7 +32,7 @@ Route onGenrateRoute(RouteSettings settings) {
     case '/':
       return MaterialPageRoute(builder: (_) => const HomePageView());
     case '/create' || "/edit":
-      return MaterialPageRoute(builder: (_) => const CreateAndEditScreenView());
+      return MaterialPageRoute(builder: (_) => const CreateAndEditPageView());
     default:
       // Handle unknown routes here or return an error route
       return MaterialPageRoute(builder: (_) => const HomePageView());
