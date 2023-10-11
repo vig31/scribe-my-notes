@@ -2,7 +2,10 @@ import 'package:appflowy_editor/appflowy_editor.dart';
 import 'package:flutter/material.dart';
 
 final customTextDecorationMobileToolbarItem = MobileToolbarItem.withMenu(
-  itemIcon: const MyCustomIconForAppFlowy(),
+  itemIcon: const Icon(
+      Icons.format_size_rounded,
+      size: 16,
+    ),
   itemMenuBuilder: (editorState, selection, _) {
     return _TextDecorationMenu(editorState, selection);
   },
@@ -105,17 +108,4 @@ class TextDecorationUnit {
     required this.label,
     required this.name,
   });
-}
-
-class MyCustomIconForAppFlowy extends StatelessWidget {
-  const MyCustomIconForAppFlowy({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Icon(
-      Icons.format_size_rounded,
-      color: Theme.of(context).iconTheme.color,
-      size: 16,
-    );
-  }
 }

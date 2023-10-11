@@ -6,9 +6,15 @@ import 'package:filesystem_picker/filesystem_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:notebook/helpers/utility.dart';
 import 'package:permission_handler/permission_handler.dart';
-import '../../reuseables/widgets/customAppflowyMobileToolBar.dart';
+import '../../reuseables/widgets/customAppflowyHeadingToolBarItem.dart';
+import '../../reuseables/widgets/customAppflowyLinkToolBarItem.dart';
+import '../../reuseables/widgets/customAppflowyListToolBarItem.dart';
+import '../../reuseables/widgets/customAppflowyMobileToolBarItem.dart';
+import '../../reuseables/widgets/customAppflowyTodoToolBarItem.dart';
 import '../../reuseables/widgets/customAppflowyToolBarItems.dart';
 import 'package:path_provider/path_provider.dart';
+
+import '../../reuseables/widgets/customBuildTextAndBackgroundColorMobileToolbarItem.dart';
 
 class CreateAndEditPageView extends StatefulWidget {
   const CreateAndEditPageView({Key? key}) : super(key: key);
@@ -23,11 +29,9 @@ class _CreateAndEditPageViewState extends State<CreateAndEditPageView> {
       'type': 'page',
       'children': [
         {
-          "type": "heading",
+          "type": "paragraph",
           "data": {
-            "level": 1,
             "delta": [
-              {"insert": "👋 "},
               {
                 "insert": "Welcome to",
                 "attributes": {"bold": true}
@@ -44,8 +48,9 @@ class _CreateAndEditPageViewState extends State<CreateAndEditPageView> {
     }
   };
   late final editorState = EditorState(
-    document: Document.fromJson(json),
-  ); // with an empty paragraph
+      document: Document.fromJson(json),
+      minHistoryItemDuration:
+          const Duration(milliseconds: 50)); // with an empty paragraph
   Future<void> convertMarkdownToPdfAndSave(String markdownContent) async {
     var result = await Permission.manageExternalStorage.request();
 
@@ -83,7 +88,9 @@ class _CreateAndEditPageViewState extends State<CreateAndEditPageView> {
           leading: IconButton(
             enableFeedback: true,
             iconSize: 21,
-            onPressed: () {},
+            onPressed: () {
+              Navigator.pop(context);
+            },
             icon: const ImageIcon(
               AssetImage(
                 "lib/resources/icons/backarrow.png",
@@ -140,8 +147,8 @@ class _CreateAndEditPageViewState extends State<CreateAndEditPageView> {
             //   width: 12,
             // ),
             SizedBox(
-              // width: 24,
-              // height: 24,
+              width: 40,
+              height: 40,
               child: IconButton(
                 enableFeedback: true,
                 iconSize: 18,
@@ -198,100 +205,220 @@ class _CreateAndEditPageViewState extends State<CreateAndEditPageView> {
             ),
           ],
         ),
-        body: Column(
-          children: [
-            Expanded(
-              child: MobileFloatingToolbar(
-                editorState: editorState,
-                editorScrollController:
-                    EditorScrollController(editorState: editorState),
-                toolbarBuilder: (context, anchor) {
-                  return AdaptiveTextSelectionToolbar.editable(
-                    clipboardStatus: ClipboardStatus.pasteable,
-                    onCopy: () => copyCommand.execute(editorState),
-                    onCut: () => cutCommand.execute(editorState),
-                    onPaste: () => pasteCommand.execute(editorState),
-                    onSelectAll: () => selectAllCommand.execute(editorState),
-                    anchors: TextSelectionToolbarAnchors(
-                      primaryAnchor: anchor,
+        body: EditorView(editorState: editorState),
+      ),
+    );
+  }
+}
+
+class EditorView extends StatefulWidget {
+  final EditorState editorState;
+  const EditorView({Key? key, required this.editorState}) : super(key: key);
+
+  @override
+  State<EditorView> createState() => _EditorViewState();
+}
+
+class _EditorViewState extends State<EditorView> {
+  late final editorState = widget.editorState;
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Expanded(
+          child: FloatingToolbar(
+            editorState: editorState,
+            editorScrollController:
+                EditorScrollController(editorState: editorState),
+            items: [
+              paragraphItem,
+              ...alignmentItems,
+              ToolbarItem(
+                id: 'cut',
+                group: 7,
+                isActive: onlyShowInTextType,
+                builder: (context, editorState, highlightColor) {
+                  return SizedBox(
+                    width: 32,
+                    height: 32,
+                    child: IconButton(
+                      padding: EdgeInsets.zero,
+                      color: Colors.white,
+                      onPressed: () => cutCommand.execute(editorState),
+                      icon: Icon(Icons.cut_rounded, size: 16),
                     ),
-                    onLiveTextInput: null,
                   );
                 },
-                child: AppFlowyEditor(
-                  editorState: editorState,
-                  editable: true,
-                  editorStyle: EditorStyle.mobile(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
-                    cursorColor: Theme.of(context).colorScheme.primary,
-                    selectionColor:
-                        Theme.of(context).colorScheme.primaryContainer,
-                    textStyleConfiguration: TextStyleConfiguration(
-                      text: Theme.of(context).textTheme.bodyMedium!,
-                      code: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                          fontFamily: 'SourceCodePro',
-                          color:
-                              Theme.of(context).colorScheme.onPrimaryContainer,
-                          backgroundColor:
-                              Theme.of(context).colorScheme.primaryContainer),
+              ),
+              ToolbarItem(
+                id: 'copy',
+                group: 7,
+                isActive: onlyShowInTextType,
+                builder: (context, editorState, highlightColor) {
+                  return SizedBox(
+                    width: 32,
+                    height: 32,
+                    child: IconButton(
+                      padding: EdgeInsets.zero,
+                      color: Colors.white,
+                      onPressed: () => copyCommand.execute(editorState),
+                      icon: Icon(Icons.content_copy_rounded, size: 16),
                     ),
-                  ),
+                  );
+                },
+              ),
+              ToolbarItem(
+                id: 'paste',
+                group: 7,
+                isActive: onlyShowInTextType,
+                builder: (context, editorState, highlightColor) {
+                  return SizedBox(
+                    width: 32,
+                    height: 32,
+                    child: IconButton(
+                      padding: EdgeInsets.zero,
+                      color: Colors.white,
+                      onPressed: () => pasteCommand.execute(editorState),
+                      icon: Icon(Icons.paste_rounded, size: 16),
+                    ),
+                  );
+                },
+              ),
+              ToolbarItem(
+                id: 'selectall',
+                group: 7,
+                isActive: onlyShowInTextType,
+                builder: (context, editorState, highlightColor) {
+                  return SizedBox(
+                    width: 32,
+                    height: 32,
+                    child: IconButton(
+                      padding: EdgeInsets.zero,
+                      color: Colors.white,
+                      onPressed: () => selectAllCommand.execute(editorState),
+                      icon: Icon(Icons.select_all_rounded, size: 16),
+                    ),
+                  );
+                },
+              ),
+            ],
+            style: FloatingToolbarStyle(
+              backgroundColor: const Color(0xFF001D31),
+              toolbarActiveColor: Colors.amber[900]!,
+            ),
+            child: AppFlowyEditor(
+              editorState: editorState,
+              editable: true,
+              editorStyle: EditorStyle.desktop(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+                cursorColor: Theme.of(context).colorScheme.primary,
+                selectionColor: Theme.of(context).colorScheme.primaryContainer,
+                textStyleConfiguration: TextStyleConfiguration(
+                  text: Theme.of(context).textTheme.bodyMedium!,
+                  code: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                      fontFamily: 'SourceCodePro',
+                      color: Theme.of(context).colorScheme.onPrimaryContainer,
+                      backgroundColor:
+                          Theme.of(context).colorScheme.primaryContainer),
                 ),
               ),
             ),
-            CustomMobileToolbar(
-              editorState: editorState,
-              backgroundColor: Theme.of(context)
-                  .colorScheme
-                  .primaryContainer
-                  .withOpacity(0.4),
-              borderRadius: 4,
-              buttonBorderWidth: 1,
-              buttonHeight: 32,
-              buttonSelectedBorderWidth: 1.8,
-              buttonSpacing: 8,
-              clearDiagonalLineColor: Theme.of(context).colorScheme.error,
-              foregroundColor: Theme.of(context).colorScheme.onSurface,
-              itemHighlightColor:
-                  Theme.of(context).colorScheme.onSecondaryContainer,
-              itemOutlineColor: Theme.of(context)
-                  .colorScheme
-                  .onPrimaryContainer
-                  .withOpacity(0.2),
-              onPrimaryColor: Theme.of(context).colorScheme.onPrimary,
-              outlineColor: Theme.of(context).colorScheme.onPrimaryContainer,
-              primaryColor: Theme.of(context).colorScheme.primary,
-              tabbarSelectedBackgroundColor:
-                  Theme.of(context).colorScheme.secondary,
-              tabbarSelectedForegroundColor:
-                  Theme.of(context).colorScheme.onSecondary,
-              toolbarHeight: 48,
-              toolbarItems: [
-                customTextDecorationMobileToolbarItem,
-                buildTextAndBackgroundColorMobileToolbarItem(),
-                headingMobileToolbarItem,
-                todoListMobileToolbarItem,
-                listMobileToolbarItem,
-                linkMobileToolbarItem,
-                quoteMobileToolbarItem,
-                dividerMobileToolbarItem,
-                MobileToolbarItem.action(
-                  itemIcon: ImageIcon(
-                    const AssetImage(
-                      "lib/resources/icons/codeblock.png",
-                    ),
-                    size: 16,
-                    color: Theme.of(context).iconTheme.color,
+          ),
+        ),
+        CustomMobileToolbar(
+          editorState: editorState,
+          backgroundColor:
+              Theme.of(context).colorScheme.primaryContainer.withOpacity(0.40),
+          borderRadius: 8,
+          buttonBorderWidth: 1,
+          buttonHeight: 40,
+          buttonSpacing: 8,
+          buttonSelectedBorderWidth: 2.0,
+          clearDiagonalLineColor: Theme.of(context).colorScheme.error,
+          foregroundColor: Theme.of(context).colorScheme.onSurface,
+          itemHighlightColor:
+              Theme.of(context).colorScheme.onSecondaryContainer,
+          itemOutlineColor:
+              Theme.of(context).colorScheme.onPrimaryContainer.withOpacity(0.2),
+          onPrimaryColor: Theme.of(context).colorScheme.onPrimary,
+          outlineColor: Theme.of(context).colorScheme.onPrimaryContainer,
+          primaryColor: Theme.of(context).colorScheme.primary,
+          tabbarSelectedBackgroundColor:
+              Theme.of(context).colorScheme.secondary,
+          tabbarSelectedForegroundColor:
+              Theme.of(context).colorScheme.onSecondary,
+          toolbarHeight: 48,
+          toolbarItems: [
+            customTodoListMobileToolbarItem,
+            customTextDecorationMobileToolbarItem,
+            customBuildTextAndBackgroundColorMobileToolbarItem(),
+            customHeadingMobileToolbarItem,
+            customListMobileToolbarItem,
+            customLinkMobileToolbarItem,
+            MobileToolbarItem.action(
+              itemIcon: const ImageIcon(
+                AssetImage(
+                  "lib/resources/icons/quote.png",
+                ),
+                size: 16,
+              ),
+              actionHandler: ((editorState, selection) {
+                final node = editorState.getNodeAtPath(selection.start.path)!;
+                final isQuote = node.type == QuoteBlockKeys.type;
+                editorState.formatNode(
+                  selection,
+                  (node) => node.copyWith(
+                    type:
+                        isQuote ? ParagraphBlockKeys.type : QuoteBlockKeys.type,
+                    attributes: {
+                      ParagraphBlockKeys.delta:
+                          (node.delta ?? Delta()).toJson(),
+                    },
                   ),
-                  actionHandler: (editorState, selection) =>
-                      editorState.toggleAttribute(AppFlowyRichTextKeys.code),
-                )
-              ],
+                );
+              }),
             ),
+            MobileToolbarItem.action(
+              itemIcon: const Icon(
+                Icons.horizontal_rule_rounded,
+                size: 16,
+              ),
+              actionHandler: ((editorState, selection) {
+                // same as the [handler] of [dividerMenuItem] in Desktop
+                final selection = editorState.selection;
+                if (selection == null || !selection.isCollapsed) {
+                  return;
+                }
+                final path = selection.end.path;
+                final node = editorState.getNodeAtPath(path);
+                final delta = node?.delta;
+                if (node == null || delta == null) {
+                  return;
+                }
+                final insertedPath = delta.isEmpty ? path : path.next;
+                final transaction = editorState.transaction
+                  ..insertNode(insertedPath, dividerNode())
+                  ..insertNode(insertedPath, paragraphNode())
+                  ..afterSelection =
+                      Selection.collapsed(Position(path: insertedPath.next));
+                editorState.apply(transaction);
+              }),
+            ),
+            MobileToolbarItem.action(
+              itemIcon: ImageIcon(
+                const AssetImage(
+                  "lib/resources/icons/codeblock.png",
+                ),
+                size: 16,
+                color: Theme.of(context).iconTheme.color,
+              ),
+              actionHandler: (editorState, selection) =>
+                  editorState.toggleAttribute(AppFlowyRichTextKeys.code),
+            )
           ],
         ),
-      ),
+      ],
     );
   }
 }

@@ -17,12 +17,15 @@ class _HomePageViewState extends State<HomePageView> {
         title: const Text("Dashboard"),
         actions: const [],
       ),
-      body: SingleChildScrollView(
-        child: Container(
-          padding: const EdgeInsets.all(10.0),
-          child: Column(
-            children: [],
-          ),
+      // body: ,
+      floatingActionButton: FloatingActionButton(
+        enableFeedback: true,
+        onPressed: () {
+          Navigator.pushNamed(context, '/create');
+        },
+        child: Icon(
+          Icons.add_rounded,
+          size: 24,
         ),
       ),
     );
