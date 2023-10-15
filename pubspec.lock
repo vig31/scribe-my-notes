@@ -789,21 +789,7 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "11.0.1"
-  permission_handler_android:
-    dependency: transitive
-    description:
-      name: permission_handler_android
-      sha256: ace7d15a3d1a4a0b91c041d01e5405df221edb9de9116525efc773c74e6fc790
-      url: "https://pub.dev"
-    source: hosted
-    version: "11.0.5"
-  permission_handler_apple:
-    dependency: transitive
-    description:
-      name: permission_handler_apple
-      sha256: "99e220bce3f8877c78e4ace901082fb29fa1b4ebde529ad0932d8d664b34f3f5"
-      url: "https://pub.dev"
-    source: hosted
+
     version: "9.1.4"
   permission_handler_platform_interface:
     dependency: transitive
@@ -900,15 +886,7 @@ packages:
       sha256: "64957a3930367bf97cc211a5af99551d630f2f4625e38af10edd6b19131b64b3"
       url: "https://pub.dev"
     source: hosted
-    version: "3.0.1"
-  rename:
-    dependency: "direct dev"
-    description:
-      name: rename
-      sha256: de41a188910744a8b4984525adc936f8d06d6748ca79f6661500b108912784f2
-      url: "https://pub.dev"
-    source: hosted
-    version: "3.0.0"
+
   rich_clipboard:
     dependency: transitive
     description:
