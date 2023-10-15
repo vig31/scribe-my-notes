@@ -21,10 +21,10 @@ packages:
     dependency: "direct main"
     description:
       name: appflowy_editor
-      sha256: "9eb900013ee2c4926b35807fd8fb565bf58e5fcf9563ab48a75854302aad7df3"
+      sha256: "086e09e6c3a1a4565105da3c0cfb76fc44b98ab955f71d9807d7a8eb67c7dff6"
       url: "https://pub.dev"
     source: hosted
-    version: "1.4.3"
+    version: "1.4.4"
   archive:
     dependency: transitive
     description:
