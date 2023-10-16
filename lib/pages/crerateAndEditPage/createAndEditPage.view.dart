@@ -108,10 +108,9 @@ class _CreateAndEditPageViewState extends State<CreateAndEditPageView> {
                 enableFeedback: true,
                 iconSize: 18,
                 onPressed: () async {
-                  print(documentToMarkdown(editorState.document));
-
                   await convertMarkdownToPdfAndSave(
-                      documentToMarkdown(editorState.document));
+                    documentToMarkdown(editorState.document),
+                  );
                 },
                 icon: const ImageIcon(
                   AssetImage(
@@ -123,9 +122,6 @@ class _CreateAndEditPageViewState extends State<CreateAndEditPageView> {
                 tooltip: "Pin it",
               ),
             ),
-            // const SizedBox(
-            //   width: 12,
-            // ),
             SizedBox(
               width: 40,
               height: 40,
@@ -228,6 +224,7 @@ class _EditorViewState extends State<EditorView> {
         Expanded(
           child: FloatingToolbar(
             editorState: editorState,
+            textDirection: null,
             editorScrollController:
                 EditorScrollController(editorState: editorState),
             items: [
@@ -237,7 +234,7 @@ class _EditorViewState extends State<EditorView> {
                 id: 'cut',
                 group: 7,
                 isActive: onlyShowInTextType,
-                builder: (context, editorState, highlightColor) {
+                builder: (context, editorState, highlightColor, _) {
                   return SizedBox(
                     width: 32,
                     height: 32,
@@ -245,7 +242,7 @@ class _EditorViewState extends State<EditorView> {
                       padding: EdgeInsets.zero,
                       color: Colors.white,
                       onPressed: () => cutCommand.execute(editorState),
-                      icon: Icon(Icons.cut_rounded, size: 16),
+                      icon: const Icon(Icons.cut_rounded, size: 16),
                     ),
                   );
                 },
@@ -254,7 +251,7 @@ class _EditorViewState extends State<EditorView> {
                 id: 'copy',
                 group: 7,
                 isActive: onlyShowInTextType,
-                builder: (context, editorState, highlightColor) {
+                builder: (context, editorState, highlightColor, _) {
                   return SizedBox(
                     width: 32,
                     height: 32,
@@ -262,7 +259,7 @@ class _EditorViewState extends State<EditorView> {
                       padding: EdgeInsets.zero,
                       color: Colors.white,
                       onPressed: () => copyCommand.execute(editorState),
-                      icon: Icon(Icons.content_copy_rounded, size: 16),
+                      icon: const Icon(Icons.content_copy_rounded, size: 16),
                     ),
                   );
                 },
@@ -271,7 +268,7 @@ class _EditorViewState extends State<EditorView> {
                 id: 'paste',
                 group: 7,
                 isActive: onlyShowInTextType,
-                builder: (context, editorState, highlightColor) {
+                builder: (context, editorState, highlightColor, _) {
                   return SizedBox(
                     width: 32,
                     height: 32,
@@ -279,7 +276,7 @@ class _EditorViewState extends State<EditorView> {
                       padding: EdgeInsets.zero,
                       color: Colors.white,
                       onPressed: () => pasteCommand.execute(editorState),
-                      icon: Icon(Icons.paste_rounded, size: 16),
+                      icon: const Icon(Icons.paste_rounded, size: 16),
                     ),
                   );
                 },
@@ -288,7 +285,7 @@ class _EditorViewState extends State<EditorView> {
                 id: 'selectall',
                 group: 7,
                 isActive: onlyShowInTextType,
-                builder: (context, editorState, highlightColor) {
+                builder: (context, editorState, highlightColor, _) {
                   return SizedBox(
                     width: 32,
                     height: 32,
@@ -296,7 +293,7 @@ class _EditorViewState extends State<EditorView> {
                       padding: EdgeInsets.zero,
                       color: Colors.white,
                       onPressed: () => selectAllCommand.execute(editorState),
-                      icon: Icon(Icons.select_all_rounded, size: 16),
+                      icon: const Icon(Icons.select_all_rounded, size: 16),
                     ),
                   );
                 },
@@ -307,6 +304,34 @@ class _EditorViewState extends State<EditorView> {
               toolbarActiveColor: Colors.amber[900]!,
             ),
             child: AppFlowyEditor(
+              header: Padding(
+              padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+                child: Column(
+                  children: [
+                    TextFormField(
+                      maxLines: 2,
+                      minLines: 1,
+                      autofocus: true,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 18,
+                      ),
+                      keyboardType: TextInputType.text,
+                      textCapitalization: TextCapitalization.sentences,
+                      smartDashesType: SmartDashesType.enabled,
+                      decoration: const InputDecoration(
+                          hintText: 'Title',
+                          border: InputBorder.none),
+                    ),
+                    const Divider(
+                      thickness: 1.0,
+                      color: Color(0xffF1F3F3),
+                    ),
+              
+                  ],
+                ),
+              ),
               editorState: editorState,
               editable: true,
               editorStyle: EditorStyle.desktop(
