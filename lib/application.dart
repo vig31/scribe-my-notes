@@ -38,7 +38,7 @@ Route onGenrateRoute(RouteSettings settings) {
     case '/':
       return MaterialPageRoute(builder: (_) => const HomePageView());
     case '/create' || "/edit":
-      return MaterialPageRoute(builder: (_) => const CreateAndEditPageView());
+      return MaterialPageRoute(builder: (_) =>  CreateAndEditPageView(editNoteId: (settings.arguments as Map?)?["editNoteId"] ?? -1 , isEdit:  (settings.arguments as Map?)?["isEdit"] ?? false ,));
     default:
       // Handle unknown routes here or return an error route
       return MaterialPageRoute(builder: (_) => const HomePageView());

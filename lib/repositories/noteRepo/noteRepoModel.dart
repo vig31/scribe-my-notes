@@ -13,7 +13,7 @@ class Note {
   @Index()
   late String note;
 
-  late String coverImagePath;
+  String coverImagePath = "";
 
   bool isAssetAsCoverImage = false;
 
@@ -27,6 +27,9 @@ class Note {
   DateTime? whenToAlert;
 
   bool isDeleted = false;
+
+  bool isPinned = false;
+
 
   @Index()
   @Backlink(to: 'notes')

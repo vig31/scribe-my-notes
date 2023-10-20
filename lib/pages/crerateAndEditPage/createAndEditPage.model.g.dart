@@ -57,6 +57,22 @@ mixin _$CreateAndEditPageModel on _CreateAndEditPageModelBase, Store {
     });
   }
 
+  late final _$isPinnedAtom =
+      Atom(name: '_CreateAndEditPageModelBase.isPinned', context: context);
+
+  @override
+  bool get isPinned {
+    _$isPinnedAtom.reportRead();
+    return super.isPinned;
+  }
+
+  @override
+  set isPinned(bool value) {
+    _$isPinnedAtom.reportWrite(value, super.isPinned, () {
+      super.isPinned = value;
+    });
+  }
+
   late final _$selectedImagePathAtom = Atom(
       name: '_CreateAndEditPageModelBase.selectedImagePath', context: context);
 
@@ -79,6 +95,7 @@ mixin _$CreateAndEditPageModel on _CreateAndEditPageModelBase, Store {
 tags: ${tags},
 selectedTag: ${selectedTag},
 isLoading: ${isLoading},
+isPinned: ${isPinned},
 selectedImagePath: ${selectedImagePath}
     ''';
   }

@@ -1,10 +1,11 @@
-// ignore_for_file: camel_case_types, prefer_typing_uninitialized_variables
+// ignore_for_file: camel_case_types, prefer_typing_uninitialized_variables, use_build_context_synchronously
 
 import 'dart:io';
 import 'package:appflowy_editor/appflowy_editor.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:filesystem_picker/filesystem_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:notebook/helpers/utility.dart';
 import 'package:notebook/pages/crerateAndEditPage/createAndEditPage.vm.dart';
@@ -17,46 +18,20 @@ import '../../reuseables/widgets/customAppflowyMobileToolBarItem.dart';
 import '../../reuseables/widgets/customAppflowyTodoToolBarItem.dart';
 import '../../reuseables/widgets/customAppflowyToolBarItems.dart';
 import 'package:path_provider/path_provider.dart';
-// import 'package:flutter_colorpicker/flutter_colorpicker.dart';
-
 import '../../reuseables/widgets/customBuildTextAndBackgroundColorMobileToolbarItem.dart';
-import '../../services/imagePickerService/ImagePickerService.dart';
 
 class CreateAndEditPageView extends StatefulWidget {
-  const CreateAndEditPageView({Key? key}) : super(key: key);
+  final bool isEdit;
+  final int editNoteId;
+
+  const CreateAndEditPageView({Key? key, required this.isEdit, required this.editNoteId}) : super(key: key);
 
   @override
   State<CreateAndEditPageView> createState() => _CreateAndEditPageViewState();
 }
 
 class _CreateAndEditPageViewState extends State<CreateAndEditPageView> {
-  final json = {
-    'document': {
-      'type': 'page',
-      'children': [
-        {
-          "type": "paragraph",
-          "data": {
-            "delta": [
-              {
-                "insert": "Welcome to",
-                "attributes": {"bold": true}
-              },
-              {"insert": " "},
-              {
-                "insert": "Note Book",
-                "attributes": {"italic": true, "bold": false}
-              }
-            ],
-          }
-        },
-      ]
-    }
-  };
-  late final editorState = EditorState(
-      document: Document.fromJson(json),
-      minHistoryItemDuration:
-          const Duration(milliseconds: 50)); // with an empty paragraph
+  late final editorState = EditorState.blank(); // with an empty paragraph
   Future<void> convertMarkdownToPdfAndSave(String markdownContent) async {
     var result = await Permission.manageExternalStorage.request();
 
@@ -94,8 +69,10 @@ class _CreateAndEditPageViewState extends State<CreateAndEditPageView> {
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: () async {
-       await  _createAndEditPageVM.saveNote(
-            title: titleController.text, noteEditorState: editorState);
+        await _createAndEditPageVM.saveNote(
+            title: titleController.text,
+            noteEditorState: editorState,
+            whenNotificationScheduled: null);
         return true;
       },
       child: GestureDetector(
@@ -107,8 +84,11 @@ class _CreateAndEditPageViewState extends State<CreateAndEditPageView> {
               iconSize: 21,
               onPressed: () async {
                 await _createAndEditPageVM.saveNote(
-                    title: titleController.text, noteEditorState: editorState);
-                Navigator.pop(context);
+                  title: titleController.text,
+                  noteEditorState: editorState,
+                  whenNotificationScheduled: null,
+                );
+                // Navigator.pop(context);
               },
               icon: const ImageIcon(
                 AssetImage(
@@ -123,23 +103,28 @@ class _CreateAndEditPageViewState extends State<CreateAndEditPageView> {
               SizedBox(
                 width: 40,
                 height: 40,
-                child: IconButton(
-                  enableFeedback: true,
-                  iconSize: 18,
-                  onPressed: () async {
-                    await convertMarkdownToPdfAndSave(
-                      documentToMarkdown(editorState.document),
-                    );
-                  },
-                  icon: const ImageIcon(
-                    AssetImage(
-                      "lib/resources/icons/pin.png",
+                child: Observer(builder: (_) {
+                  return IconButton(
+                    enableFeedback: true,
+                    iconSize: 18,
+                    onPressed: () async {
+                      _createAndEditPageVM.changePinedStatus();
+                      // await convertMarkdownToPdfAndSave(
+                      //   documentToMarkdown(editorState.document),
+                      // );
+                    },
+                    icon: ImageIcon(
+                      AssetImage(
+                        _createAndEditPageVM.isPinned
+                            ? "lib/resources/icons/pin_filled.png"
+                            : "lib/resources/icons/pin.png",
+                      ),
                     ),
-                  ),
-                  padding: EdgeInsets.zero,
-                  alignment: Alignment.center,
-                  tooltip: "Pin it",
-                ),
+                    padding: EdgeInsets.zero,
+                    alignment: Alignment.center,
+                    tooltip: "Pin it",
+                  );
+                }),
               ),
               SizedBox(
                 width: 40,
@@ -148,21 +133,70 @@ class _CreateAndEditPageViewState extends State<CreateAndEditPageView> {
                   enableFeedback: true,
                   iconSize: 18,
                   onPressed: () async {
-                    await Permission.notification.request();
-                    await AwesomeNotifications().createNotification(
-                      content: NotificationContent(
-                        id: 10,
-                        channelKey: 'basic_channel',
-                        title: 'Scheduled Notification',
-                        body: 'This is a scheduled notification.',
-                        bigPicture:
-                            "file://${_createAndEditPageVM.selectedImagePath}",
-                        notificationLayout: NotificationLayout.BigPicture,
-                        wakeUpScreen: true,
-                        category: NotificationCategory.Reminder,
-                        criticalAlert: true,
-                      ),
-                      // schedule:NotificationCalendar(second: 3,), // You can customize the timing here
+                    final DateTime? pickedDate = await showDatePicker(
+                        context: context,
+                        initialDate: DateTime.now(),
+                        initialDatePickerMode: DatePickerMode.day,
+                        firstDate: DateTime.now(),
+                        lastDate: DateTime(2101));
+
+                    final TimeOfDay? pickedTime = await showTimePicker(
+                        context: context,
+                        initialTime: TimeOfDay.now(),
+                        initialEntryMode: TimePickerEntryMode.dialOnly);
+
+                    var finalDateTime = DateTime(
+                        pickedDate!.year,
+                        pickedDate.month,
+                        pickedDate.day,
+                        pickedTime!.hour,
+                        pickedTime.minute);
+
+                    var permissionStatus =
+                        await Permission.notification.request();
+                    if (permissionStatus.isGranted) {
+                      await AwesomeNotifications().createNotification(
+                        content: NotificationContent(
+                          id: 10,
+                          channelKey: 'basic_channel',
+                          title: titleController.text,
+                          body: (((editorState.document.toJson()
+                                          as Map<String, dynamic>)["document"]
+                                      ["children"])
+                                  .map(
+                                    (e) {
+                                      return e["data"]["delta"]
+                                          .map(
+                                            (f) {
+                                              return " ${f["insert"].toString().trim()}";
+                                            },
+                                          )
+                                          .join("")
+                                          .toString()
+                                          .trim();
+                                    },
+                                  )
+                                  .toList()
+                                  .join(" ")
+                                  .toString()
+                                  .trim())
+                              .replaceAll(RegExp(r' +'), ' '),
+                          notificationLayout: NotificationLayout.Default,
+                          wakeUpScreen: true,
+                          category: NotificationCategory.Reminder,
+                          criticalAlert: true,
+                        ),
+                        schedule: NotificationCalendar(
+                          hour: finalDateTime.hour,
+                          minute: finalDateTime.minute,
+                          allowWhileIdle: true,
+                        ),
+                      );
+                    }
+                    _createAndEditPageVM.saveNote(
+                      title: titleController.text,
+                      noteEditorState: editorState,
+                      whenNotificationScheduled: finalDateTime,
                     );
                   },
                   icon: const ImageIcon(
@@ -178,50 +212,51 @@ class _CreateAndEditPageViewState extends State<CreateAndEditPageView> {
               // const SizedBox(
               //   width: 12,
               // ),
-              SizedBox(
-                width: 40,
-                height: 40,
-                child: IconButton(
-                  enableFeedback: true,
-                  iconSize: 18,
-                  onPressed: () {},
-                  icon: const ImageIcon(
-                    AssetImage(
-                      "lib/resources/icons/bookmark.png",
-                    ),
-                  ),
-                  padding: EdgeInsets.zero,
-                  alignment: Alignment.center,
-                  tooltip: "Tag",
-                ),
-              ),
+              //! Planned for Next release
+              // SizedBox(
+              //   width: 40,
+              //   height: 40,
+              //   child: IconButton(
+              //     enableFeedback: true,
+              //     iconSize: 18,
+              //     onPressed: () {
+              //       // _createAndEditPageVM.saveTag("wer", "wer");
+              //     },
+              //     icon: const ImageIcon(
+              //       AssetImage(
+              //         "lib/resources/icons/bookmark.png",
+              //       ),
+              //     ),
+              //     padding: EdgeInsets.zero,
+              //     alignment: Alignment.center,
+              //     tooltip: "Tag",
+              //   ),
+              // ),
               // const SizedBox(
               //   width: 12,
               // ),
               SizedBox(
                 width: 40,
                 height: 40,
-                child: IconButton(
-                  enableFeedback: true,
-                  iconSize: 18,
-                  onPressed: () async {
-                    _createAndEditPageVM.selectedImagePath =
-                        await ImagePickerRepo().getImage();
-                    setState(() {
-                      _createAndEditPageVM.selectedImagePath;
-                    });
-                  },
-                  icon: ImageIcon(
-                    AssetImage(
-                      _createAndEditPageVM.selectedImagePath.isEmpty
-                          ? "lib/resources/icons/image_add.png"
-                          : "lib/resources/icons/image_edit.png",
+                child: Observer(builder: (_) {
+                  return IconButton(
+                    enableFeedback: true,
+                    iconSize: 18,
+                    onPressed: () async {
+                      await _createAndEditPageVM.pickCoverImageFromGall();
+                    },
+                    icon: ImageIcon(
+                      AssetImage(
+                        _createAndEditPageVM.selectedImagePath.isEmpty
+                            ? "lib/resources/icons/image_add.png"
+                            : "lib/resources/icons/image_edit.png",
+                      ),
                     ),
-                  ),
-                  padding: EdgeInsets.zero,
-                  alignment: Alignment.center,
-                  tooltip: "Add Image",
-                ),
+                    padding: EdgeInsets.zero,
+                    alignment: Alignment.center,
+                    tooltip: "Add Image",
+                  );
+                }),
               ),
               // const SizedBox(
               //   width: 12,
@@ -364,25 +399,28 @@ class _EditorViewState extends State<EditorView> {
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
                 child: Column(
                   children: [
-                    widget.createAndEditPageVM.selectedImagePath.isEmpty
-                        ? const SizedBox.shrink()
-                        : ClipRRect(
-                            borderRadius: BorderRadius.circular(16),
-                            child: Image.file(
-                              File(
-                                  widget.createAndEditPageVM.selectedImagePath),
-                              height: 208,
-                              width: double.maxFinite,
-                              fit: BoxFit.cover,
-                              frameBuilder: (context, child, frame,
-                                  wasSynchronouslyLoaded) {
-                                if (frame == null) {
-                                  return const LinearProgressIndicator();
-                                }
-                                return child;
-                              },
-                            ),
-                          ),
+                    Observer(builder: (context) {
+                      return widget
+                              .createAndEditPageVM.selectedImagePath.isEmpty
+                          ? const SizedBox.shrink()
+                          : ClipRRect(
+                              borderRadius: BorderRadius.circular(16),
+                              child: Image.file(
+                                File(widget
+                                    .createAndEditPageVM.selectedImagePath),
+                                height: 208,
+                                width: double.maxFinite,
+                                fit: BoxFit.cover,
+                                frameBuilder: (context, child, frame,
+                                    wasSynchronouslyLoaded) {
+                                  if (frame == null) {
+                                    return const LinearProgressIndicator();
+                                  }
+                                  return child;
+                                },
+                              ),
+                            );
+                    }),
                     TextFormField(
                       controller: widget.titleController,
                       maxLines: 2,
