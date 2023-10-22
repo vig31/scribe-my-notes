@@ -85,8 +85,31 @@ class CreateAndEditPageVM extends CreateAndEditPageModel {
     required final EditorState noteEditorState,
     required final DateTime? whenNotificationScheduled,
   }) async {
-    var note = Note();
     try {
+      List<String> finalText = [];
+      noteEditorState.document.root.children.map((e) {
+        return e.attributes;
+      }).map((element) {
+        if ((element['delta'] != null)) {
+          return (element['delta']);
+        }
+      }).forEach((element) {
+        if (element != null && element.length > 0) {
+          for (var element in (element as List)) {
+            finalText.add((element['insert']));
+          }
+        }
+      });
+
+      var noteContent =
+          finalText.join(" ").trim().replaceAll(RegExp(r' +'), ' ');
+
+      if (title.trim().isEmpty && noteContent.trim().isEmpty) {
+        return;
+      }
+
+      var note = Note();
+
       if (isEdit) {
         note = editNote!;
       } else {

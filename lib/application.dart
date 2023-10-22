@@ -1,6 +1,8 @@
 import 'package:appflowy_editor/appflowy_editor.dart';
 import 'package:flutter/material.dart';
+import 'package:notebook/pages/searchPage/searchPage.view.dart';
 
+import 'helpers/constants.dart';
 import 'pages/crerateAndEditPage/createAndEditPage.view.dart';
 import 'pages/homePage/homePage.view.dart';
 import 'resources/theme/theme.dart';
@@ -11,6 +13,7 @@ class Application extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      key: appKey,
       debugShowCheckedModeBanner: false,
       theme: lightTheme.copyWith(
           pageTransitionsTheme: const PageTransitionsTheme(
@@ -21,7 +24,6 @@ class Application extends StatelessWidget {
       )),
       darkTheme: darkTheme,
       themeMode: ThemeMode.system,
-      initialRoute: "/create",
       onGenerateRoute: onGenrateRoute,
       localizationsDelegates: const [
         AppFlowyEditorLocalizations.delegate,
@@ -40,11 +42,13 @@ Route onGenrateRoute(RouteSettings settings) {
     case '/create' || "/edit":
       return MaterialPageRoute(
         builder: (_) => CreateAndEditPageView(
-          editNoteId: 1,
-          // (settings.arguments as Map?)?["editNoteId"] ?? -1,
-          isEdit: true,
-          //  (settings.arguments as Map?)?["isEdit"] ?? false,
+          editNoteId: (settings.arguments as Map?)?["editNoteId"] ?? -1,
+          isEdit: (settings.arguments as Map?)?["isEdit"] ?? false,
         ),
+      );
+    case '/search':
+      return MaterialPageRoute(
+        builder: (_) => const SearchPage(),
       );
     default:
       // Handle unknown routes here or return an error route

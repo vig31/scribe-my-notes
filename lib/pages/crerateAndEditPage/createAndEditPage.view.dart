@@ -1,4 +1,4 @@
-// ignore_for_file: camel_case_types, prefer_typing_uninitialized_variables, use_build_context_synchronously
+// ignore_for_file: camel_case_types, prefer_typing_uninitialized_variables, use_build_context_synchronously, duplicate_ignore
 
 import 'dart:convert';
 import 'dart:io';
@@ -11,6 +11,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:notebook/helpers/utility.dart';
 import 'package:notebook/pages/crerateAndEditPage/createAndEditPage.vm.dart';
 import 'package:permission_handler/permission_handler.dart';
+import '../../helpers/constants.dart';
 import '../../repositories/imagePickerRepo/imagePickerRepo.dart';
 import '../../reuseables/widgets/customAppflowyHeadingToolBarItem.dart';
 import '../../reuseables/widgets/customAppflowyLinkToolBarItem.dart';
@@ -183,6 +184,10 @@ class _CreateAndEditPageViewState extends State<CreateAndEditPageView> {
                               .join(" ")
                               .trim()
                               .replaceAll(RegExp(r' +'), ' ');
+                          if (titleController.text.trim().isEmpty &&
+                              noteContent.trim().isEmpty) {
+                            return;
+                          }
                           await AwesomeNotifications().createNotification(
                             content: NotificationContent(
                               id: 10,
@@ -444,7 +449,9 @@ class _CreateAndEditPageViewState extends State<CreateAndEditPageView> {
       position: const RelativeRect.fromLTRB(100, 80, 16, 100),
       items: [
         PopupMenuItem(
-          onTap: () {},
+          onTap: () async {
+            await saveAsPdf();
+          },
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.start,
@@ -472,7 +479,9 @@ class _CreateAndEditPageViewState extends State<CreateAndEditPageView> {
           ),
         ),
         PopupMenuItem(
-          onTap: () {},
+          onTap: () async {
+            await saveAsMd();
+          },
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.start,
@@ -505,35 +514,105 @@ class _CreateAndEditPageViewState extends State<CreateAndEditPageView> {
     );
   }
 
-  Future<void> convertMarkdownToPdfAndSave(String markdownContent) async {
+  Future<void> saveAsPdf() async {
     var result = await Permission.manageExternalStorage.request();
+    if (result.isGranted) {
+      var pathtosave = await chooseTheFolder();
+      if (pathtosave.isNotEmpty) {
+        await saveDocumentToPdf(
+            appFlowyDocumentToParse: editorState.document,
+            outputFilepath:
+                "$pathtosave/output-${DateTime.now().year}-${DateTime.now().year}-${DateTime.now().day}-${DateTime.now().second}.pdf");
+      }
+    }
+  }
 
-    final tempdirectory = await getTemporaryDirectory();
+  Future<void> saveAsMd() async {
+    var result = await Permission.manageExternalStorage.request();
+    if (result.isGranted) {
+      var pathtosave = await chooseTheFolder();
+      if (pathtosave.isNotEmpty) {
+        var outputSavedFile = File(
+            "$pathtosave/output-${DateTime.now().year}-${DateTime.now().year}-${DateTime.now().day}-${DateTime.now().second}.md");
+        await outputSavedFile.create(recursive: true);
+        await outputSavedFile
+            .writeAsString(documentToMarkdown(editorState.document));
+      }
+    }
+  }
 
-    // ignore: use_build_context_synchronously
-    String pathtosave = await FilesystemPicker.open(
-          title: 'Save to folder',
+  Future<String> chooseTheFolder() async {
+    return await FilesystemPicker.open(
+          title: 'Pick a folder',
           context: context,
           rootDirectory: Directory("/storage/emulated/0"),
           fsType: FilesystemType.folder,
           requestPermission: () async =>
               await Permission.manageExternalStorage.request().isGranted,
-          pickText: 'Save file to this folder',
+          pickText: 'Save file here',
+          showGoUp: false,
+          theme: FilesystemPickerAutoSystemTheme(
+            darkTheme: FilesystemPickerTheme(
+              topBar: FilesystemPickerTopBarThemeData(
+                  backgroundColor: const Color.fromARGB(255, 55, 103, 185)),
+              fileList: FilesystemPickerFileListThemeData(
+                iconSize: 24,
+                folderIconColor: Colors.blueAccent,
+                folderTextStyle: const TextStyle(
+                  fontWeight: FontWeight.w500,
+                  fontSize: 16,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+            lightTheme: FilesystemPickerTheme(
+              backgroundColor: Colors.grey.shade200,
+              topBar: FilesystemPickerTopBarThemeData(
+                foregroundColor: Colors.blueGrey.shade800,
+                backgroundColor: Colors.grey.shade200,
+                elevation: 0,
+                shape: const ContinuousRectangleBorder(
+                  side: BorderSide(
+                    color: Color(0xFFDDDDDD),
+                    width: 1.0,
+                  ),
+                ),
+                iconTheme: const IconThemeData(
+                  color: Colors.black,
+                  size: 24,
+                ),
+                titleTextStyle: const TextStyle(fontWeight: FontWeight.bold),
+                breadcrumbsTheme: BreadcrumbsThemeData(
+                  itemColor: Colors.blue.shade800,
+                  inactiveItemColor: Colors.blue.shade800.withOpacity(0.6),
+                  separatorColor: Colors.blue.shade800.withOpacity(0.3),
+                ),
+              ),
+              fileList: FilesystemPickerFileListThemeData(
+                iconSize: 24,
+                folderIconColor: Colors.blue,
+                folderTextStyle: const TextStyle(
+                  fontWeight: FontWeight.w500,
+                  fontSize: 16,
+                  color: Colors.black,
+                ),
+              ),
+              pickerAction: FilesystemPickerActionThemeData(
+                foregroundColor: Colors.blueGrey.shade800,
+                disabledForegroundColor: Colors.blueGrey.shade500,
+                backgroundColor: Colors.grey.shade200,
+                shape: const ContinuousRectangleBorder(
+                  side: BorderSide(
+                    color: Color(0xFFDDDDDD),
+                    width: 1.0,
+                  ),
+                ),
+              ),
+            ),
+          ),
         ) ??
         "";
-    // // final directory = await getDownloadsDirectory();
-    // final filePath = '${path}/output.md';
-
-    // // Save the PDF to the downloads directory
-    final file = File(tempdirectory.path + "/tempmdfile.md");
-    await file.writeAsString(markdownContent);
-    saveMdtopdf(
-        mdfilepath: file.path,
-        outputFilepath: "${pathtosave}/sampleoutput.pdf");
   }
-
-  // /storage/emulated/0/Android/data/com.vigneshveeraswamy.notebook/files/downloads/output.pdf
-  // String imagePath = "";
 }
 
 class EditorView extends StatefulWidget {
@@ -715,7 +794,7 @@ class _EditorViewState extends State<EditorView> {
                       controller: widget.titleController,
                       maxLines: 2,
                       minLines: 1,
-                      autofocus: false,
+                      autofocus: true,
                       style: const TextStyle(
                         fontWeight: FontWeight.w600,
                         fontSize: 18,
@@ -724,7 +803,9 @@ class _EditorViewState extends State<EditorView> {
                       textCapitalization: TextCapitalization.sentences,
                       smartDashesType: SmartDashesType.enabled,
                       decoration: const InputDecoration(
-                          hintText: 'Title', border: InputBorder.none),
+                        hintText: 'Title',
+                        border: InputBorder.none,
+                      ),
                       contextMenuBuilder: (context, editableTextState) {
                         return AdaptiveTextSelectionToolbar.buttonItems(
                           anchors: editableTextState.contextMenuAnchors,

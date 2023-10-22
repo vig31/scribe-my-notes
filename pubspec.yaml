@@ -21,6 +21,7 @@ dependencies:
   get_it: ^7.6.4
   html: ^0.15.4
   image_picker: ^1.0.4
+  intl: ^0.18.1
   isar: ^3.1.0+1
   isar_flutter_libs: ^3.1.0+1
   keyboard_attachable: ^2.1.0

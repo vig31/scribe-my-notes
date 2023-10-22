@@ -33,9 +33,10 @@ class ImagePickerRepo {
       // Step 5: Move the picked image to the app's documents directory
       final File newImage = await File(image.path).copy(filePath);
 
-      print(newImage.path);
+      // Step 6: Delete the picked image from the app's temp to free up memory
+      await File(image.path).delete();
 
-      // Step 6: Return the saved image's file path as a string
+      // Step 7: Return the saved image's file path as a string
       return newImage.path;
     } catch (ex, stack) {
       CustomLogger().logFatelException(error: ex, stack: stack);
