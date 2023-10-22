@@ -8,6 +8,8 @@ import 'package:markdown/markdown.dart' as md;
 import 'package:pdf/pdf.dart' as p;
 import 'package:pdf/pdf.dart';
 import 'package:http/http.dart' as http;
+import 'dart:math';
+import 'package:appflowy_editor/appflowy_editor.dart' as appflowy;
 
 // computed style is a stack, each time we encounter an element like <p>... we push its style onto the stack, then pop it off at </p>
 // the top of the stack merges all of the styles of the parents.
@@ -228,7 +230,7 @@ class Styler {
                 text: await inlineChildren(
                     e,
                     Style(
-                        boxDecoration: pw.BoxDecoration(
+                        boxDecoration: const pw.BoxDecoration(
                           color: PdfColors.grey200,
                           borderRadius:
                               pw.BorderRadius.all(pw.Radius.circular(3)),
@@ -236,12 +238,12 @@ class Styler {
                         font: pw.Font.courier())));
           case "strong":
             return Chunk(
-                text: 
-                await inlineChildren(e, Style(weight: pw.FontWeight.bold)));
+                text:
+                    await inlineChildren(e, Style(weight: pw.FontWeight.bold)));
           case "em":
             return Chunk(
                 text: await inlineChildren(
-                  e, Style(fontStyle: pw.FontStyle.italic)));
+                    e, Style(fontStyle: pw.FontStyle.italic)));
           case "a":
             return Chunk(
                 widget: [_UrlText((e.innerHtml), (e.attributes["href"]!))]);
@@ -288,7 +290,7 @@ class Styler {
                   pw.SizedBox(width: 20, height: 20, child: bullet),
                   pw.Expanded(
                       child: pw.Padding(
-                          padding: pw.EdgeInsets.only(left: 10),
+                          padding: const pw.EdgeInsets.only(left: 10),
                           child: pw.Column(
                               crossAxisAlignment: pw.CrossAxisAlignment.start,
                               children: wl)))
@@ -344,9 +346,9 @@ class Styler {
               pw.Container(
                   child: pw.Row(
                       children: await widgetChildren(
-                        e, Style(font: pw.Font.courier()))),
-                  padding: pw.EdgeInsets.all(5),
-                  decoration: pw.BoxDecoration(
+                          e, Style(font: pw.Font.courier()))),
+                  padding: const pw.EdgeInsets.all(5),
+                  decoration: const pw.BoxDecoration(
                       borderRadius: pw.BorderRadius.all(pw.Radius.circular(3)),
                       color: PdfColors.grey200))
             ]);
@@ -375,7 +377,7 @@ class Styler {
                   c as Element;
                   if (c.localName == "th") {
                     cellfill = PdfColors.grey300;
-                    border = pw.Border(
+                    border = const pw.Border(
                         bottom: pw.BorderSide(width: 2),
                         top: pw.BorderSide(color: PdfColors.white));
                     ws = await widgetChildren(
@@ -424,25 +426,22 @@ class Styler {
   }
 }
 
-void saveMdtopdf({required String mdfilepath, required String outputFilepath}) async {
-  print(Directory.current);
-  final md2 = await File(mdfilepath).readAsString();
-  var htmlx = md.markdownToHtml(md2,
-      inlineSyntaxes: [md.InlineHtmlSyntax()],
-      blockSyntaxes: [
-        const md.TableSyntax(),
-        md.FencedCodeBlockSyntax(),
-        md.HeaderWithIdSyntax(),
-        md.SetextHeaderWithIdSyntax(),
-      ],
-      extensionSet: md.ExtensionSet.gitHubWeb);
-  File("$outputFilepath.html").writeAsString(htmlx);
-  var document = parse(htmlx);
-  if (document.body == null) {
+Future<void> saveDocumentToPdf(
+    {required appflowy.Document appFlowyDocumentToParse,
+    required String outputFilepath}) async {
+  var htmldocument = parse(appflowy.documentToHTML(appFlowyDocumentToParse));
+  if (htmldocument.body == null) {
     return;
   }
-  Chunk ch = await Styler().format(document.body!);
+  Chunk ch = await Styler().format(htmldocument.body!);
   var doc = pw.Document();
   doc.addPage(pw.MultiPage(build: (context) => ch.widget ?? []));
-  File(outputFilepath).writeAsBytes(await doc.save());
+  var outputSavedFile = File(outputFilepath);
+  await outputSavedFile.create(recursive: true);
+  await outputSavedFile.writeAsBytes(await doc.save());
+}
+
+int randomPositiveNumberWithThreshold(int threshold) {
+  Random random = Random();
+  return random.nextInt(threshold) + 1;
 }

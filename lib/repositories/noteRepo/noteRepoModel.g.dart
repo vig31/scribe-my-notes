@@ -42,18 +42,23 @@ const NoteSchema = CollectionSchema(
       name: r'isDeleted',
       type: IsarType.bool,
     ),
-    r'note': PropertySchema(
+    r'isPinned': PropertySchema(
       id: 5,
+      name: r'isPinned',
+      type: IsarType.bool,
+    ),
+    r'note': PropertySchema(
+      id: 6,
       name: r'note',
       type: IsarType.string,
     ),
     r'title': PropertySchema(
-      id: 6,
+      id: 7,
       name: r'title',
       type: IsarType.string,
     ),
     r'whenToAlert': PropertySchema(
-      id: 7,
+      id: 8,
       name: r'whenToAlert',
       type: IsarType.dateTime,
     )
@@ -169,9 +174,10 @@ void _noteSerialize(
   writer.writeDateTime(offsets[2], object.editedAt);
   writer.writeBool(offsets[3], object.isAssetAsCoverImage);
   writer.writeBool(offsets[4], object.isDeleted);
-  writer.writeString(offsets[5], object.note);
-  writer.writeString(offsets[6], object.title);
-  writer.writeDateTime(offsets[7], object.whenToAlert);
+  writer.writeBool(offsets[5], object.isPinned);
+  writer.writeString(offsets[6], object.note);
+  writer.writeString(offsets[7], object.title);
+  writer.writeDateTime(offsets[8], object.whenToAlert);
 }
 
 Note _noteDeserialize(
@@ -187,9 +193,10 @@ Note _noteDeserialize(
   object.id = id;
   object.isAssetAsCoverImage = reader.readBool(offsets[3]);
   object.isDeleted = reader.readBool(offsets[4]);
-  object.note = reader.readString(offsets[5]);
-  object.title = reader.readString(offsets[6]);
-  object.whenToAlert = reader.readDateTimeOrNull(offsets[7]);
+  object.isPinned = reader.readBool(offsets[5]);
+  object.note = reader.readString(offsets[6]);
+  object.title = reader.readString(offsets[7]);
+  object.whenToAlert = reader.readDateTimeOrNull(offsets[8]);
   return object;
 }
 
@@ -211,10 +218,12 @@ P _noteDeserializeProp<P>(
     case 4:
       return (reader.readBool(offset)) as P;
     case 5:
-      return (reader.readString(offset)) as P;
+      return (reader.readBool(offset)) as P;
     case 6:
       return (reader.readString(offset)) as P;
     case 7:
+      return (reader.readString(offset)) as P;
+    case 8:
       return (reader.readDateTimeOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -1017,6 +1026,15 @@ extension NoteQueryFilter on QueryBuilder<Note, Note, QFilterCondition> {
     });
   }
 
+  QueryBuilder<Note, Note, QAfterFilterCondition> isPinnedEqualTo(bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'isPinned',
+        value: value,
+      ));
+    });
+  }
+
   QueryBuilder<Note, Note, QAfterFilterCondition> noteEqualTo(
     String value, {
     bool caseSensitive = true,
@@ -1420,6 +1438,18 @@ extension NoteQuerySortBy on QueryBuilder<Note, Note, QSortBy> {
     });
   }
 
+  QueryBuilder<Note, Note, QAfterSortBy> sortByIsPinned() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isPinned', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Note, Note, QAfterSortBy> sortByIsPinnedDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isPinned', Sort.desc);
+    });
+  }
+
   QueryBuilder<Note, Note, QAfterSortBy> sortByNote() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'note', Sort.asc);
@@ -1530,6 +1560,18 @@ extension NoteQuerySortThenBy on QueryBuilder<Note, Note, QSortThenBy> {
     });
   }
 
+  QueryBuilder<Note, Note, QAfterSortBy> thenByIsPinned() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isPinned', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Note, Note, QAfterSortBy> thenByIsPinnedDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isPinned', Sort.desc);
+    });
+  }
+
   QueryBuilder<Note, Note, QAfterSortBy> thenByNote() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'note', Sort.asc);
@@ -1600,6 +1642,12 @@ extension NoteQueryWhereDistinct on QueryBuilder<Note, Note, QDistinct> {
     });
   }
 
+  QueryBuilder<Note, Note, QDistinct> distinctByIsPinned() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'isPinned');
+    });
+  }
+
   QueryBuilder<Note, Note, QDistinct> distinctByNote(
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
@@ -1655,6 +1703,12 @@ extension NoteQueryProperty on QueryBuilder<Note, Note, QQueryProperty> {
   QueryBuilder<Note, bool, QQueryOperations> isDeletedProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'isDeleted');
+    });
+  }
+
+  QueryBuilder<Note, bool, QQueryOperations> isPinnedProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'isPinned');
     });
   }
 
