@@ -1,5 +1,6 @@
 // ignore_for_file: camel_case_types, prefer_typing_uninitialized_variables, use_build_context_synchronously
 
+import 'dart:convert';
 import 'dart:io';
 import 'package:appflowy_editor/appflowy_editor.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
@@ -24,14 +25,486 @@ class CreateAndEditPageView extends StatefulWidget {
   final bool isEdit;
   final int editNoteId;
 
-  const CreateAndEditPageView({Key? key, required this.isEdit, required this.editNoteId}) : super(key: key);
+  const CreateAndEditPageView(
+      {Key? key, required this.isEdit, required this.editNoteId})
+      : super(key: key);
 
   @override
   State<CreateAndEditPageView> createState() => _CreateAndEditPageViewState();
 }
 
 class _CreateAndEditPageViewState extends State<CreateAndEditPageView> {
-  late final editorState = EditorState.blank(); // with an empty paragraph
+  late final CreateAndEditPageVM _createAndEditPageVM;
+
+  late final EditorState editorState;
+
+  late final TextEditingController titleController;
+  DateTime? finalSelectedDate;
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    _createAndEditPageVM = CreateAndEditPageVM(
+        editNoteId: widget.editNoteId, isEdit: widget.isEdit);
+    _createAndEditPageVM.init();
+    _createAndEditPageVM.currentNoteController.stream.listen((event) {
+      if (widget.isEdit && _createAndEditPageVM.editNote != null) {
+        editorState = EditorState(
+          document: Document.fromJson(
+            jsonDecode(event.note),
+          ),
+        );
+        titleController = TextEditingController(text: event.title);
+      } else {
+        editorState = EditorState.blank(withInitialText: true);
+        titleController = TextEditingController();
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return WillPopScope(
+      onWillPop: () async {
+        await _createAndEditPageVM.saveNote(
+          title: titleController.text,
+          noteEditorState: editorState,
+          whenNotificationScheduled: finalSelectedDate,
+        );
+        var re = _createAndEditPageVM.isLoading ? false : true;
+        return re;
+      },
+      child: GestureDetector(
+        onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+        child: Scaffold(
+          appBar: AppBar(
+            leading: IconButton(
+              enableFeedback: true,
+              iconSize: 21,
+              onPressed: () async {
+                if (!_createAndEditPageVM.isLoading) {
+                  await _createAndEditPageVM.saveNote(
+                    title: titleController.text,
+                    noteEditorState: editorState,
+                    whenNotificationScheduled: finalSelectedDate,
+                  );
+                  Navigator.pop(context);
+                }
+              },
+              icon: const ImageIcon(
+                AssetImage(
+                  "lib/resources/icons/backarrow.png",
+                ),
+              ),
+              padding: EdgeInsets.zero,
+              alignment: Alignment.center,
+              tooltip: "Go Back",
+            ),
+            actions: [
+              Observer(builder: (context) {
+                return Visibility(
+                  visible: !_createAndEditPageVM.isLoading,
+                  child: SizedBox(
+                    width: 40,
+                    height: 40,
+                    child: Observer(builder: (_) {
+                      return IconButton(
+                        enableFeedback: true,
+                        iconSize: 18,
+                        onPressed: () async {
+                          _createAndEditPageVM.changePinedStatus();
+                          // await convertMarkdownToPdfAndSave(
+                          //   documentToMarkdown(editorState.document),
+                          // );
+                        },
+                        icon: ImageIcon(
+                          AssetImage(
+                            _createAndEditPageVM.isPinned
+                                ? "lib/resources/icons/pin_filled.png"
+                                : "lib/resources/icons/pin.png",
+                          ),
+                        ),
+                        padding: EdgeInsets.zero,
+                        alignment: Alignment.center,
+                        tooltip: "Pin it",
+                      );
+                    }),
+                  ),
+                );
+              }),
+              Observer(builder: (_) {
+                return Visibility(
+                  visible: !_createAndEditPageVM.isLoading,
+                  child: SizedBox(
+                    width: 40,
+                    height: 40,
+                    child: IconButton(
+                      enableFeedback: true,
+                      iconSize: 18,
+                      onPressed: () async {
+                        final DateTime? pickedDate = await showDatePicker(
+                            context: context,
+                            initialDate: DateTime.now(),
+                            initialDatePickerMode: DatePickerMode.day,
+                            firstDate: DateTime.now(),
+                            lastDate: DateTime(2101));
+
+                        final TimeOfDay? pickedTime = await showTimePicker(
+                            context: context,
+                            initialTime: TimeOfDay.now(),
+                            initialEntryMode: TimePickerEntryMode.dialOnly);
+
+                        var finalDateTime = DateTime(
+                            pickedDate!.year,
+                            pickedDate.month,
+                            pickedDate.day,
+                            pickedTime!.hour,
+                            pickedTime.minute);
+
+                        var permissionStatus =
+                            await Permission.notification.request();
+                        if (permissionStatus.isGranted) {
+                          List<String> finalText = [];
+                          editorState.document.root.children.map((e) {
+                            return e.attributes;
+                          }).map((element) {
+                            if ((element['delta'] != null)) {
+                              return (element['delta']);
+                            }
+                          }).forEach((element) {
+                            if (element != null && element.length > 0) {
+                              for (var element in (element as List)) {
+                                finalText.add((element['insert']));
+                              }
+                            }
+                          });
+                          var noteContent = finalText
+                              .join(" ")
+                              .trim()
+                              .replaceAll(RegExp(r' +'), ' ');
+                          await AwesomeNotifications().createNotification(
+                            content: NotificationContent(
+                              id: 10,
+                              channelKey: 'basic_channel',
+                              title: titleController.text,
+                              body: noteContent,
+                              notificationLayout: NotificationLayout.Default,
+                              wakeUpScreen: true,
+                              category: NotificationCategory.Reminder,
+                              criticalAlert: true,
+                            ),
+                            schedule: NotificationCalendar(
+                              hour: finalDateTime.hour,
+                              minute: finalDateTime.minute,
+                              allowWhileIdle: true,
+                            ),
+                          );
+                        }
+                        finalSelectedDate = finalDateTime;
+                        _createAndEditPageVM.saveNote(
+                          title: titleController.text,
+                          noteEditorState: editorState,
+                          whenNotificationScheduled: finalDateTime,
+                        );
+                      },
+                      icon: const ImageIcon(
+                        AssetImage(
+                          "lib/resources/icons/bell.png",
+                        ),
+                      ),
+                      padding: EdgeInsets.zero,
+                      alignment: Alignment.center,
+                      tooltip: "Add remainder",
+                    ),
+                  ),
+                );
+              }),
+              // const SizedBox(
+              //   width: 12,
+              // ),
+              //! Planned for Next release
+              // SizedBox(
+              //   width: 40,
+              //   height: 40,
+              //   child: IconButton(
+              //     enableFeedback: true,
+              //     iconSize: 18,
+              //     onPressed: () {
+              //       // _createAndEditPageVM.saveTag("wer", "wer");
+              //     },
+              //     icon: const ImageIcon(
+              //       AssetImage(
+              //         "lib/resources/icons/bookmark.png",
+              //       ),
+              //     ),
+              //     padding: EdgeInsets.zero,
+              //     alignment: Alignment.center,
+              //     tooltip: "Tag",
+              //   ),
+              // ),
+              // const SizedBox(
+              //   width: 12,
+              // ),
+              Observer(builder: (_) {
+                return Visibility(
+                  visible: !_createAndEditPageVM.isLoading,
+                  child: SizedBox(
+                    width: 40,
+                    height: 40,
+                    child: Observer(builder: (_) {
+                      return IconButton(
+                        enableFeedback: true,
+                        iconSize: 18,
+                        onPressed: () async {
+                          await _createAndEditPageVM.pickCoverImageFromGall();
+                        },
+                        icon: ImageIcon(
+                          AssetImage(
+                            _createAndEditPageVM.selectedImagePath.isEmpty
+                                ? "lib/resources/icons/image_add.png"
+                                : "lib/resources/icons/image_edit.png",
+                          ),
+                        ),
+                        padding: EdgeInsets.zero,
+                        alignment: Alignment.center,
+                        tooltip: "Add Image",
+                      );
+                    }),
+                  ),
+                );
+              }),
+              // const SizedBox(
+              //   width: 12,
+              // ),
+              Observer(builder: (_) {
+                return Visibility(
+                  visible: !_createAndEditPageVM.isLoading,
+                  child: SizedBox(
+                    width: 40,
+                    height: 40,
+                    child: PopupMenuButton(
+                      clipBehavior: Clip.antiAlias,
+                      enableFeedback: true,
+                      tooltip: "More options",
+                      padding: EdgeInsets.zero,
+                      itemBuilder: (ctx) => [
+                        PopupMenuItem(
+                          onTap: () {
+                            _showSavePopupMenu();
+                          },
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              ImageIcon(
+                                size: 18,
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onPrimaryContainer,
+                                const AssetImage(
+                                  "lib/resources/icons/download.png",
+                                ),
+                              ),
+                              const SizedBox(
+                                width: 12,
+                              ),
+                              Text(
+                                "Save",
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyMedium!
+                                    .copyWith(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onPrimaryContainer,
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 12,
+                                    ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        // PopupMenuItem 2
+                        PopupMenuItem(
+                          onTap: () {},
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              ImageIcon(
+                                size: 18,
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onPrimaryContainer,
+                                const AssetImage(
+                                  "lib/resources/icons/share.png",
+                                ),
+                              ),
+                              const SizedBox(
+                                width: 12,
+                              ),
+                              Text(
+                                "Share",
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyMedium!
+                                    .copyWith(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onPrimaryContainer,
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 12,
+                                    ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        if (_createAndEditPageVM.isEdit)
+                          PopupMenuItem(
+                            onTap: () {
+                              _createAndEditPageVM.deleteNote();
+                              Navigator.pop(context);
+                            },
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                ImageIcon(
+                                  size: 18,
+                                  color: Theme.of(context).colorScheme.error,
+                                  const AssetImage(
+                                    "lib/resources/icons/delete.png",
+                                  ),
+                                ),
+                                const SizedBox(
+                                  width: 12,
+                                ),
+                                Text(
+                                  "Delete",
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium!
+                                      .copyWith(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onPrimaryContainer,
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 12,
+                                      ),
+                                ),
+                              ],
+                            ),
+                          ),
+                      ],
+                      offset: const Offset(-16, 45),
+                      elevation: 10,
+                      icon: const ImageIcon(
+                        AssetImage(
+                          "lib/resources/icons/more_menu_vertical.png",
+                        ),
+                      ),
+                      iconSize: 18,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                  ),
+                );
+              }),
+            ],
+          ),
+          body: Observer(
+            builder: (_) {
+              if (_createAndEditPageVM.isLoading) {
+                return const Center(
+                  child: CircularProgressIndicator(),
+                );
+              } else {
+                return EditorView(
+                  editorState: editorState,
+                  createAndEditPageVM: _createAndEditPageVM,
+                  titleController: titleController,
+                );
+              }
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showSavePopupMenu() async {
+    await showMenu(
+      context: context,
+      clipBehavior: Clip.antiAlias,
+      position: const RelativeRect.fromLTRB(100, 80, 16, 100),
+      items: [
+        PopupMenuItem(
+          onTap: () {},
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              ImageIcon(
+                color: Theme.of(context).colorScheme.onPrimaryContainer,
+                size: 18,
+                const AssetImage(
+                  "lib/resources/icons/filetype_pdf.png",
+                ),
+              ),
+              const SizedBox(
+                width: 12,
+              ),
+              Text(
+                "Save as PDF",
+                style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                      color: Theme.of(context).colorScheme.onPrimaryContainer,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 12,
+                    ),
+              ),
+            ],
+          ),
+        ),
+        PopupMenuItem(
+          onTap: () {},
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              ImageIcon(
+                color: Theme.of(context).colorScheme.onPrimaryContainer,
+                size: 18,
+                const AssetImage(
+                  "lib/resources/icons/filetype_md.png",
+                ),
+              ),
+              const SizedBox(
+                width: 12,
+              ),
+              Text(
+                "Save as md",
+                style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                      color: Theme.of(context).colorScheme.onPrimaryContainer,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 12,
+                    ),
+              ),
+            ],
+          ),
+        ),
+      ],
+      elevation: 10,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+    );
+  }
+
   Future<void> convertMarkdownToPdfAndSave(String markdownContent) async {
     var result = await Permission.manageExternalStorage.request();
 
@@ -61,233 +534,6 @@ class _CreateAndEditPageViewState extends State<CreateAndEditPageView> {
 
   // /storage/emulated/0/Android/data/com.vigneshveeraswamy.notebook/files/downloads/output.pdf
   // String imagePath = "";
-  final _createAndEditPageVM = CreateAndEditPageVM();
-
-  final TextEditingController titleController = TextEditingController();
-
-  @override
-  Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async {
-        await _createAndEditPageVM.saveNote(
-            title: titleController.text,
-            noteEditorState: editorState,
-            whenNotificationScheduled: null);
-        return true;
-      },
-      child: GestureDetector(
-        onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
-        child: Scaffold(
-          appBar: AppBar(
-            leading: IconButton(
-              enableFeedback: true,
-              iconSize: 21,
-              onPressed: () async {
-                await _createAndEditPageVM.saveNote(
-                  title: titleController.text,
-                  noteEditorState: editorState,
-                  whenNotificationScheduled: null,
-                );
-                // Navigator.pop(context);
-              },
-              icon: const ImageIcon(
-                AssetImage(
-                  "lib/resources/icons/backarrow.png",
-                ),
-              ),
-              padding: EdgeInsets.zero,
-              alignment: Alignment.center,
-              tooltip: "Go Back",
-            ),
-            actions: [
-              SizedBox(
-                width: 40,
-                height: 40,
-                child: Observer(builder: (_) {
-                  return IconButton(
-                    enableFeedback: true,
-                    iconSize: 18,
-                    onPressed: () async {
-                      _createAndEditPageVM.changePinedStatus();
-                      // await convertMarkdownToPdfAndSave(
-                      //   documentToMarkdown(editorState.document),
-                      // );
-                    },
-                    icon: ImageIcon(
-                      AssetImage(
-                        _createAndEditPageVM.isPinned
-                            ? "lib/resources/icons/pin_filled.png"
-                            : "lib/resources/icons/pin.png",
-                      ),
-                    ),
-                    padding: EdgeInsets.zero,
-                    alignment: Alignment.center,
-                    tooltip: "Pin it",
-                  );
-                }),
-              ),
-              SizedBox(
-                width: 40,
-                height: 40,
-                child: IconButton(
-                  enableFeedback: true,
-                  iconSize: 18,
-                  onPressed: () async {
-                    final DateTime? pickedDate = await showDatePicker(
-                        context: context,
-                        initialDate: DateTime.now(),
-                        initialDatePickerMode: DatePickerMode.day,
-                        firstDate: DateTime.now(),
-                        lastDate: DateTime(2101));
-
-                    final TimeOfDay? pickedTime = await showTimePicker(
-                        context: context,
-                        initialTime: TimeOfDay.now(),
-                        initialEntryMode: TimePickerEntryMode.dialOnly);
-
-                    var finalDateTime = DateTime(
-                        pickedDate!.year,
-                        pickedDate.month,
-                        pickedDate.day,
-                        pickedTime!.hour,
-                        pickedTime.minute);
-
-                    var permissionStatus =
-                        await Permission.notification.request();
-                    if (permissionStatus.isGranted) {
-                      await AwesomeNotifications().createNotification(
-                        content: NotificationContent(
-                          id: 10,
-                          channelKey: 'basic_channel',
-                          title: titleController.text,
-                          body: (((editorState.document.toJson()
-                                          as Map<String, dynamic>)["document"]
-                                      ["children"])
-                                  .map(
-                                    (e) {
-                                      return e["data"]["delta"]
-                                          .map(
-                                            (f) {
-                                              return " ${f["insert"].toString().trim()}";
-                                            },
-                                          )
-                                          .join("")
-                                          .toString()
-                                          .trim();
-                                    },
-                                  )
-                                  .toList()
-                                  .join(" ")
-                                  .toString()
-                                  .trim())
-                              .replaceAll(RegExp(r' +'), ' '),
-                          notificationLayout: NotificationLayout.Default,
-                          wakeUpScreen: true,
-                          category: NotificationCategory.Reminder,
-                          criticalAlert: true,
-                        ),
-                        schedule: NotificationCalendar(
-                          hour: finalDateTime.hour,
-                          minute: finalDateTime.minute,
-                          allowWhileIdle: true,
-                        ),
-                      );
-                    }
-                    _createAndEditPageVM.saveNote(
-                      title: titleController.text,
-                      noteEditorState: editorState,
-                      whenNotificationScheduled: finalDateTime,
-                    );
-                  },
-                  icon: const ImageIcon(
-                    AssetImage(
-                      "lib/resources/icons/bell.png",
-                    ),
-                  ),
-                  padding: EdgeInsets.zero,
-                  alignment: Alignment.center,
-                  tooltip: "Add remainder",
-                ),
-              ),
-              // const SizedBox(
-              //   width: 12,
-              // ),
-              //! Planned for Next release
-              // SizedBox(
-              //   width: 40,
-              //   height: 40,
-              //   child: IconButton(
-              //     enableFeedback: true,
-              //     iconSize: 18,
-              //     onPressed: () {
-              //       // _createAndEditPageVM.saveTag("wer", "wer");
-              //     },
-              //     icon: const ImageIcon(
-              //       AssetImage(
-              //         "lib/resources/icons/bookmark.png",
-              //       ),
-              //     ),
-              //     padding: EdgeInsets.zero,
-              //     alignment: Alignment.center,
-              //     tooltip: "Tag",
-              //   ),
-              // ),
-              // const SizedBox(
-              //   width: 12,
-              // ),
-              SizedBox(
-                width: 40,
-                height: 40,
-                child: Observer(builder: (_) {
-                  return IconButton(
-                    enableFeedback: true,
-                    iconSize: 18,
-                    onPressed: () async {
-                      await _createAndEditPageVM.pickCoverImageFromGall();
-                    },
-                    icon: ImageIcon(
-                      AssetImage(
-                        _createAndEditPageVM.selectedImagePath.isEmpty
-                            ? "lib/resources/icons/image_add.png"
-                            : "lib/resources/icons/image_edit.png",
-                      ),
-                    ),
-                    padding: EdgeInsets.zero,
-                    alignment: Alignment.center,
-                    tooltip: "Add Image",
-                  );
-                }),
-              ),
-              // const SizedBox(
-              //   width: 12,
-              // ),
-              SizedBox(
-                width: 40,
-                height: 40,
-                child: IconButton(
-                  enableFeedback: true,
-                  iconSize: 18,
-                  onPressed: () {},
-                  icon: const ImageIcon(
-                    AssetImage(
-                      "lib/resources/icons/more_menu_vertical.png",
-                    ),
-                  ),
-                  padding: EdgeInsets.zero,
-                  alignment: Alignment.center,
-                  tooltip: "More Menu",
-                ),
-              ),
-            ],
-          ),
-          body: EditorView(
-              editorState: editorState,
-              createAndEditPageVM: _createAndEditPageVM,
-              titleController: titleController),
-        ),
-      ),
-    );
-  }
 }
 
 class EditorView extends StatefulWidget {
@@ -307,6 +553,50 @@ class EditorView extends StatefulWidget {
 
 class _EditorViewState extends State<EditorView> {
   late final editorState = widget.editorState;
+
+  late Map<String, BlockComponentBuilder> _blockComponentBuilder;
+
+  @override
+  void initState() {
+    super.initState();
+    _blockComponentBuilder = _buildBlockComponentBuilders();
+  }
+
+  Map<String, BlockComponentBuilder> _buildBlockComponentBuilders() {
+    final map = {
+      ...standardBlockComponentBuilderMap,
+    };
+
+    final levelToFontSize = [
+      24.0,
+      22.0,
+      20.0,
+      18.0,
+      16.0,
+      14.0,
+    ];
+    map[HeadingBlockKeys.type] = HeadingBlockComponentBuilder(
+      textStyleBuilder: (level) => Theme.of(context)
+          .textTheme
+          .bodyMedium!
+          .copyWith(
+              fontSize: levelToFontSize.elementAtOrNull(level - 1) ?? 14.0),
+    );
+
+    map[ParagraphBlockKeys.type] = TextBlockComponentBuilder(
+      configuration: BlockComponentConfiguration(
+        placeholderText: (node) => 'Type something...',
+        placeholderTextStyle: (node) {
+          return Theme.of(context)
+              .textTheme
+              .bodyMedium!
+              .copyWith(color: Colors.grey);
+        },
+      ),
+    );
+    return map;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -473,7 +763,7 @@ class _EditorViewState extends State<EditorView> {
               ),
               editorState: editorState,
               editable: true,
-              editorStyle: EditorStyle.desktop(
+              editorStyle: EditorStyle(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
                 cursorColor: Theme.of(context).colorScheme.primary,
@@ -481,12 +771,15 @@ class _EditorViewState extends State<EditorView> {
                 textStyleConfiguration: TextStyleConfiguration(
                   text: Theme.of(context).textTheme.bodyMedium!,
                   code: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                      fontFamily: 'SourceCodePro',
-                      color: Theme.of(context).colorScheme.onPrimaryContainer,
-                      backgroundColor:
-                          Theme.of(context).colorScheme.primaryContainer),
+                        fontFamily: 'SourceCodePro',
+                        color: Theme.of(context).colorScheme.onPrimaryContainer,
+                        backgroundColor:
+                            Theme.of(context).colorScheme.primaryContainer,
+                      ),
                 ),
+                textSpanDecorator: defaultTextSpanDecoratorForAttribute,
               ),
+              blockComponentBuilders: _blockComponentBuilder,
             ),
           ),
         ),

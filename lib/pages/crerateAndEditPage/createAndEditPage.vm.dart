@@ -26,8 +26,17 @@ class CreateAndEditPageVM extends CreateAndEditPageModel {
       if (isEdit) {
         await fetchEditNote();
       }
+      var note = Note()
+        ..title = ""
+        ..note = "";
+      currentNoteController.add(editNote ?? note);
       isLoading = false;
     } catch (e, s) {
+      currentNoteController.add(
+        Note()
+          ..title = ""
+          ..note = "",
+      );
       isLoading = false;
       CustomLogger().logFatelException(error: e, stack: s);
     }
@@ -133,7 +142,9 @@ class CreateAndEditPageVM extends CreateAndEditPageModel {
     try {
       if (isEdit) {
         return await dbRepo.isar.writeTxn<bool>(() async {
-          return await dbRepo.isar.notes.delete(editNote!.id);
+          return await dbRepo.isar.notes
+              .delete(editNote!.id)
+              .then((value) => isEdit = !value);
         });
       } else {
         return true;

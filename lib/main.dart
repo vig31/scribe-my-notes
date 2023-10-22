@@ -28,7 +28,7 @@ Future<void> initApp() async {
     ],
   );
   var instance = IsarDBRepo();
-  instance.initDBWithSchema(schemas: dbSchemas);
+  await instance.initDBWithSchema(schemas: dbSchemas);
   GetIt.I.registerLazySingleton<IsarDBRepo>(() => IsarDBRepo());
   GetIt.I.registerLazySingleton<ImagePickerRepo>(() => ImagePickerRepo());
 }

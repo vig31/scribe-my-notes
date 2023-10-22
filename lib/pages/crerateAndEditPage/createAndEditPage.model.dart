@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:get_it/get_it.dart';
 import 'package:mobx/mobx.dart';
 import 'package:notebook/repositories/IsarDBRepo/isarSDRepo.dart';
@@ -27,6 +29,8 @@ abstract class _CreateAndEditPageModelBase with Store {
   String selectedImagePath = "";
 
   Note? editNote;
+
+  StreamController<Note> currentNoteController = StreamController<Note>();
 
   bool isEdit = false;
 

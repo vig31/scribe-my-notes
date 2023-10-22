@@ -15,8 +15,8 @@ class Application extends StatelessWidget {
       theme: lightTheme.copyWith(
           pageTransitionsTheme: const PageTransitionsTheme(
         builders: {
-          TargetPlatform.android: CupertinoPageTransitionsBuilder(),
-          TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+          TargetPlatform.android: CustompageTransitionBuilder(),
+          TargetPlatform.iOS: CustompageTransitionBuilder(),
         },
       )),
       darkTheme: darkTheme,
@@ -38,7 +38,14 @@ Route onGenrateRoute(RouteSettings settings) {
     case '/':
       return MaterialPageRoute(builder: (_) => const HomePageView());
     case '/create' || "/edit":
-      return MaterialPageRoute(builder: (_) =>  CreateAndEditPageView(editNoteId: (settings.arguments as Map?)?["editNoteId"] ?? -1 , isEdit:  (settings.arguments as Map?)?["isEdit"] ?? false ,));
+      return MaterialPageRoute(
+        builder: (_) => CreateAndEditPageView(
+          editNoteId: 1,
+          // (settings.arguments as Map?)?["editNoteId"] ?? -1,
+          isEdit: true,
+          //  (settings.arguments as Map?)?["isEdit"] ?? false,
+        ),
+      );
     default:
       // Handle unknown routes here or return an error route
       return MaterialPageRoute(builder: (_) => const HomePageView());
