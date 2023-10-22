@@ -13,7 +13,7 @@ class Note {
   @Index()
   late String note;
 
-  late String coverImagePath;
+  String coverImagePath = "";
 
   bool isAssetAsCoverImage = false;
 
@@ -28,24 +28,11 @@ class Note {
 
   bool isDeleted = false;
 
+  bool isPinned = false;
+
+
   @Index()
   @Backlink(to: 'notes')
   var tag = IsarLink<Tag>();
 
-  Note updateWithEditedAt() {
-    final Note newNote = Note();
-    newNote.id = id;
-    newNote.title = title;
-    newNote.note = note;
-    newNote.coverImagePath = coverImagePath;
-    newNote.isAssetAsCoverImage = isAssetAsCoverImage;
-    newNote.createdAt = createdAt;
-    newNote.editedAt = DateTime.now();
-    newNote.whenToAlert = whenToAlert;
-    newNote.isDeleted = isDeleted;
-    newNote.tag.value = tag.value;
-    newNote.tag.saveSync();
-    newNote.tag.loadSync();
-    return newNote;
-  }
 }
