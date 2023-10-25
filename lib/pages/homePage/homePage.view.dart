@@ -1,8 +1,12 @@
 // ignore_for_file: camel_case_types, prefer_typing_uninitialized_variables
 
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_mobx/flutter_mobx.dart';
+import 'package:shimmer/shimmer.dart';
 
 import 'homePage.vm.dart';
 
@@ -15,6 +19,13 @@ class HomePageView extends StatefulWidget {
 
 class _HomePageViewState extends State<HomePageView> {
   final HomePageVM _instanceOfVM = HomePageVM();
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    _instanceOfVM.initHomePage();
+  }
+
   @override
   Widget build(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
@@ -45,85 +56,214 @@ class _HomePageViewState extends State<HomePageView> {
       ),
       child: Scaffold(
         body: SafeArea(
-          child: ListView(
-            physics: const ClampingScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(0, 16, 0, 21),
-            children: [
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16),
-                child: Text(
-                  "Today's Reminders",
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 21,
-                  ),
-                ),
+          child: Observer(builder: (context) {
+            return Visibility(
+              visible: !_instanceOfVM.isLoading,
+              replacement: const Center(
+                child: CircularProgressIndicator.adaptive(),
               ),
-              const SizedBox(
-                height: 16,
-              ),
-              SizedBox(
-                height: 160,
-                child: ListView.builder(
-                  shrinkWrap: true,
-                  scrollDirection: Axis.horizontal,
-                  itemCount: 10,
-                  padding: EdgeInsets.zero,
-                  itemBuilder: (context, index) {
-                    return Card(
-                      child: Container(
-                        width: 160,
-                        child: const Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [Text("data")],
+              child: ListView(
+                physics: const ClampingScrollPhysics(),
+                padding: const EdgeInsets.fromLTRB(0, 16, 0, 21),
+                children: [
+                  Observer(builder: (context) {
+                    return Visibility(
+                      // ignore: prefer_is_empty
+                      visible: _instanceOfVM.todaysRemainder.length != 0,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 16),
+                            child: Text(
+                              "Today's Reminders",
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 21,
+                              ),
+                            ),
                           ),
-                        ),
+                          const SizedBox(
+                            height: 16,
+                          ),
+                          SizedBox(
+                            height: 160,
+                            child: ListView.separated(
+                              shrinkWrap: true,
+                              scrollDirection: Axis.horizontal,
+                              itemCount: _instanceOfVM.todaysRemainder.length,
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 16, ),
+                              itemBuilder: (context, index) {
+                                return ClipRRect(
+                                  borderRadius: BorderRadius.circular(16),
+                                  child: GestureDetector(
+                                    onTap: ()async {
+                                      await Navigator.pushNamed(context, '/edit',
+                                arguments: {
+                                  "editNoteId":
+                                      _instanceOfVM.todaysRemainder[index].id,
+                                  "isEdit": true,
+                                });
+                                    },
+                                    child: Stack(
+                                      children: [
+                                        Visibility(
+                                          visible: !_instanceOfVM
+                                              .todaysRemainder[index]
+                                              .isAssetAsCoverImage,
+                                          replacement: Image.asset(
+                                            width: 160,
+                                            height: 160,
+                                            filterQuality: FilterQuality.high,
+                                            fit: BoxFit.cover,
+                                            frameBuilder: (context, child,
+                                                frame, wasSynchronouslyLoaded) {
+                                              if (frame != null) {
+                                                return child;
+                                              } else {
+                                                return Shimmer.fromColors(
+                                                  baseColor: Theme.of(context)
+                                                      .scaffoldBackgroundColor,
+                                                  highlightColor:
+                                                      Theme.of(context)
+                                                          .colorScheme
+                                                          .onInverseSurface,
+                                                  child: Container(
+                                                    width: 160,
+                                                    height: 160,
+                                                    color: Theme.of(context)
+                                                        .scaffoldBackgroundColor,
+                                                  ),
+                                                );
+                                              }
+                                            },
+                                            _instanceOfVM.todaysRemainder[index]
+                                                .coverImagePath,
+                                          ),
+                                          child: Image.file(
+                                            fit: BoxFit.cover,
+                                            width: 160,
+                                            height: 160,
+                                            filterQuality: FilterQuality.medium,
+                                            File(
+                                              _instanceOfVM
+                                                  .todaysRemainder[index]
+                                                  .coverImagePath,
+                                            ),
+                                            frameBuilder: (context, child,
+                                                frame, wasSynchronouslyLoaded) {
+                                              if (frame != null) {
+                                                return child;
+                                              } else {
+                                                return Shimmer.fromColors(
+                                                  baseColor: Theme.of(context)
+                                                      .scaffoldBackgroundColor,
+                                                  highlightColor:
+                                                      Theme.of(context)
+                                                          .colorScheme
+                                                          .onInverseSurface,
+                                                  child: Container(
+                                                    width: 160,
+                                                    height: 160,
+                                                    color: Theme.of(context)
+                                                        .scaffoldBackgroundColor,
+                                                  ),
+                                                );
+                                              }
+                                            },
+                                          ),
+                                        ),
+                                        Container(
+                                          width: 160,
+                                          decoration: BoxDecoration(
+                                            gradient: LinearGradient(
+                                              begin: Alignment.topCenter,
+                                              end: Alignment.bottomCenter,
+                                              colors: [
+                                                Colors.black.withOpacity(0.05),
+                                                Colors.black.withOpacity(0.1),
+                                                Colors.black.withOpacity(0.9)
+                                              ],
+                                            ),
+                                          ),
+                                          child: Padding(
+                                            padding: const EdgeInsets.fromLTRB(
+                                                12, 0, 12, 8),
+                                            child: Align(
+                                              alignment: Alignment.bottomLeft,
+                                              child: Text(
+                                                _instanceOfVM
+                                                    .todaysRemainder[index].title,
+                                                maxLines: 2,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: const TextStyle(
+                                                  fontWeight: FontWeight.w600,
+                                                  fontSize: 14,
+                                                  color: Colors.white,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              },
+                              separatorBuilder: (context, index) {
+                                return const SizedBox(
+                                  width: 16,
+                                );
+                              },
+                            ),
+                          ),
+                        ],
                       ),
                     );
-                  },
-                ),
-              ),
-              const SizedBox(
-                height: 16,
-              ),
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16),
-                child: Text(
-                  "Pinned Notes",
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 21,
+                  }),
+                  const SizedBox(
+                    height: 16,
                   ),
-                ),
-              ),
-              const SizedBox(
-                height: 16,
-              ),
-              ListView.builder(
-                shrinkWrap: true,
-                scrollDirection: Axis.vertical,
-                itemCount: 10,
-                padding: EdgeInsets.zero,
-                physics: NeverScrollableScrollPhysics(),
-                itemBuilder: (context, index) {
-                  return Card(
-                    child: Container(
-                      height: 160,
-                      child: const Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [Text("data")],
-                        ),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16),
+                    child: Text(
+                      "Pinned Notes",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 21,
                       ),
                     ),
-                  );
-                },
+                  ),
+                  const SizedBox(
+                    height: 16,
+                  ),
+                  Observer(builder: (context) {
+                    return ListView.builder(
+                      shrinkWrap: true,
+                      scrollDirection: Axis.vertical,
+                      itemCount: _instanceOfVM.allNotes.length,
+                      padding: EdgeInsets.zero,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemBuilder: (context, index) {
+                        return ListTile(
+                          onTap: () async {
+                            await Navigator.pushNamed(context, '/edit',
+                                arguments: {
+                                  "editNoteId":
+                                      _instanceOfVM.allNotes[index].id,
+                                  "isEdit": true,
+                                });
+                          },
+                          title: Text(_instanceOfVM.allNotes[index].title),
+                        );
+                      },
+                    );
+                  }),
+                ],
               ),
-            ],
-          ),
+            );
+          }),
         ),
         bottomNavigationBar: BottomAppBar(
           elevation: 21,

@@ -71,7 +71,6 @@ class _CreateAndEditPageViewState extends State<CreateAndEditPageView> {
         await _createAndEditPageVM.saveNote(
           title: titleController.text,
           noteEditorState: editorState,
-          whenNotificationScheduled: finalSelectedDate,
         );
         var re = _createAndEditPageVM.isLoading ? false : true;
         return re;
@@ -88,7 +87,6 @@ class _CreateAndEditPageViewState extends State<CreateAndEditPageView> {
                   await _createAndEditPageVM.saveNote(
                     title: titleController.text,
                     noteEditorState: editorState,
-                    whenNotificationScheduled: finalSelectedDate,
                   );
                   Navigator.pop(context);
                 }
@@ -151,67 +149,69 @@ class _CreateAndEditPageViewState extends State<CreateAndEditPageView> {
                             firstDate: DateTime.now(),
                             lastDate: DateTime(2101));
 
-                        final TimeOfDay? pickedTime = await showTimePicker(
-                            context: context,
-                            initialTime: TimeOfDay.now(),
-                            initialEntryMode: TimePickerEntryMode.dialOnly);
+                        if (pickedDate != null) {
+                          final TimeOfDay? pickedTime = await showTimePicker(
+                              context: context,
+                              initialTime: TimeOfDay.now(),
+                              initialEntryMode: TimePickerEntryMode.dialOnly);
 
-                        var finalDateTime = DateTime(
-                            pickedDate!.year,
-                            pickedDate.month,
-                            pickedDate.day,
-                            pickedTime!.hour,
-                            pickedTime.minute);
+                          var finalDateTime = DateTime(
+                              pickedDate.year,
+                              pickedDate.month,
+                              pickedDate.day,
+                              pickedTime!.hour,
+                              pickedTime.minute);
 
-                        var permissionStatus =
-                            await Permission.notification.request();
-                        if (permissionStatus.isGranted) {
-                          List<String> finalText = [];
-                          editorState.document.root.children.map((e) {
-                            return e.attributes;
-                          }).map((element) {
-                            if ((element['delta'] != null)) {
-                              return (element['delta']);
-                            }
-                          }).forEach((element) {
-                            if (element != null && element.length > 0) {
-                              for (var element in (element as List)) {
-                                finalText.add((element['insert']));
+                          var permissionStatus =
+                              await Permission.notification.request();
+                          if (permissionStatus.isGranted) {
+                            List<String> finalText = [];
+                            editorState.document.root.children.map((e) {
+                              return e.attributes;
+                            }).map((element) {
+                              if ((element['delta'] != null)) {
+                                return (element['delta']);
                               }
+                            }).forEach((element) {
+                              if (element != null && element.length > 0) {
+                                for (var element in (element as List)) {
+                                  finalText.add((element['insert']));
+                                }
+                              }
+                            });
+                            var noteContent = finalText
+                                .join(" ")
+                                .trim()
+                                .replaceAll(RegExp(r' +'), ' ');
+                            if (titleController.text.trim().isEmpty &&
+                                noteContent.trim().isEmpty) {
+                              return;
                             }
-                          });
-                          var noteContent = finalText
-                              .join(" ")
-                              .trim()
-                              .replaceAll(RegExp(r' +'), ' ');
-                          if (titleController.text.trim().isEmpty &&
-                              noteContent.trim().isEmpty) {
-                            return;
+                            await AwesomeNotifications().createNotification(
+                              content: NotificationContent(
+                                id: 10,
+                                channelKey: 'basic_channel',
+                                title: titleController.text,
+                                body: noteContent,
+                                notificationLayout: NotificationLayout.Default,
+                                wakeUpScreen: true,
+                                category: NotificationCategory.Reminder,
+                                criticalAlert: true,
+                              ),
+                              schedule: NotificationCalendar(
+                                hour: finalDateTime.hour,
+                                minute: finalDateTime.minute,
+                                allowWhileIdle: true,
+                              ),
+                            );
                           }
-                          await AwesomeNotifications().createNotification(
-                            content: NotificationContent(
-                              id: 10,
-                              channelKey: 'basic_channel',
-                              title: titleController.text,
-                              body: noteContent,
-                              notificationLayout: NotificationLayout.Default,
-                              wakeUpScreen: true,
-                              category: NotificationCategory.Reminder,
-                              criticalAlert: true,
-                            ),
-                            schedule: NotificationCalendar(
-                              hour: finalDateTime.hour,
-                              minute: finalDateTime.minute,
-                              allowWhileIdle: true,
-                            ),
+                          finalSelectedDate = finalDateTime;
+                          _createAndEditPageVM.whenScheduled = finalDateTime;
+                          _createAndEditPageVM.saveNote(
+                            title: titleController.text,
+                            noteEditorState: editorState,
                           );
                         }
-                        finalSelectedDate = finalDateTime;
-                        _createAndEditPageVM.saveNote(
-                          title: titleController.text,
-                          noteEditorState: editorState,
-                          whenNotificationScheduled: finalDateTime,
-                        );
                       },
                       icon: const ImageIcon(
                         AssetImage(
@@ -769,8 +769,7 @@ class _EditorViewState extends State<EditorView> {
                 child: Column(
                   children: [
                     Observer(builder: (context) {
-                      return widget
-                              .createAndEditPageVM.selectedImagePath.isEmpty
+                      return (widget.createAndEditPageVM.isAssestImage)
                           ? const SizedBox.shrink()
                           : ClipRRect(
                               borderRadius: BorderRadius.circular(16),
@@ -792,7 +791,7 @@ class _EditorViewState extends State<EditorView> {
                     }),
                     TextFormField(
                       controller: widget.titleController,
-                      maxLines: 2,
+                      maxLines: 5,
                       minLines: 1,
                       autofocus: true,
                       style: const TextStyle(

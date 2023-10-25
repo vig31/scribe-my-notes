@@ -89,6 +89,22 @@ mixin _$CreateAndEditPageModel on _CreateAndEditPageModelBase, Store {
     });
   }
 
+  late final _$isAssestImageAtom =
+      Atom(name: '_CreateAndEditPageModelBase.isAssestImage', context: context);
+
+  @override
+  bool get isAssestImage {
+    _$isAssestImageAtom.reportRead();
+    return super.isAssestImage;
+  }
+
+  @override
+  set isAssestImage(bool value) {
+    _$isAssestImageAtom.reportWrite(value, super.isAssestImage, () {
+      super.isAssestImage = value;
+    });
+  }
+
   @override
   String toString() {
     return '''
@@ -96,7 +112,8 @@ tags: ${tags},
 selectedTag: ${selectedTag},
 isLoading: ${isLoading},
 isPinned: ${isPinned},
-selectedImagePath: ${selectedImagePath}
+selectedImagePath: ${selectedImagePath},
+isAssestImage: ${isAssestImage}
     ''';
   }
 }

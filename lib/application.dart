@@ -15,13 +15,7 @@ class Application extends StatelessWidget {
     return MaterialApp(
       key: appKey,
       debugShowCheckedModeBanner: false,
-      theme: lightTheme.copyWith(
-          pageTransitionsTheme: const PageTransitionsTheme(
-        builders: {
-          TargetPlatform.android: CustompageTransitionBuilder(),
-          TargetPlatform.iOS: CustompageTransitionBuilder(),
-        },
-      )),
+      theme: lightTheme,
       darkTheme: darkTheme,
       themeMode: ThemeMode.system,
       onGenerateRoute: onGenrateRoute,
