@@ -21,7 +21,6 @@ abstract class _CreateAndEditPageModelBase with Store {
 
   @observable
   bool isLoading = false;
-
   @observable
   bool isPinned = false;
 
