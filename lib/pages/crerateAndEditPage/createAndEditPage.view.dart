@@ -11,6 +11,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:notebook/helpers/utility.dart';
 import 'package:notebook/pages/crerateAndEditPage/createAndEditPage.vm.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:share_plus/share_plus.dart';
 import '../../helpers/constants.dart';
 import '../../repositories/imagePickerRepo/imagePickerRepo.dart';
 import '../../reuseables/widgets/customAppflowyHeadingToolBarItem.dart';
@@ -71,7 +72,6 @@ class _CreateAndEditPageViewState extends State<CreateAndEditPageView> {
         await _createAndEditPageVM.saveNote(
           title: titleController.text,
           noteEditorState: editorState,
-          whenNotificationScheduled: finalSelectedDate,
         );
         var re = _createAndEditPageVM.isLoading ? false : true;
         return re;
@@ -88,7 +88,6 @@ class _CreateAndEditPageViewState extends State<CreateAndEditPageView> {
                   await _createAndEditPageVM.saveNote(
                     title: titleController.text,
                     noteEditorState: editorState,
-                    whenNotificationScheduled: finalSelectedDate,
                   );
                   Navigator.pop(context);
                 }
@@ -151,67 +150,69 @@ class _CreateAndEditPageViewState extends State<CreateAndEditPageView> {
                             firstDate: DateTime.now(),
                             lastDate: DateTime(2101));
 
-                        final TimeOfDay? pickedTime = await showTimePicker(
-                            context: context,
-                            initialTime: TimeOfDay.now(),
-                            initialEntryMode: TimePickerEntryMode.dialOnly);
+                        if (pickedDate != null) {
+                          final TimeOfDay? pickedTime = await showTimePicker(
+                              context: context,
+                              initialTime: TimeOfDay.now(),
+                              initialEntryMode: TimePickerEntryMode.dialOnly);
 
-                        var finalDateTime = DateTime(
-                            pickedDate!.year,
-                            pickedDate.month,
-                            pickedDate.day,
-                            pickedTime!.hour,
-                            pickedTime.minute);
+                          var finalDateTime = DateTime(
+                              pickedDate.year,
+                              pickedDate.month,
+                              pickedDate.day,
+                              pickedTime!.hour,
+                              pickedTime.minute);
 
-                        var permissionStatus =
-                            await Permission.notification.request();
-                        if (permissionStatus.isGranted) {
-                          List<String> finalText = [];
-                          editorState.document.root.children.map((e) {
-                            return e.attributes;
-                          }).map((element) {
-                            if ((element['delta'] != null)) {
-                              return (element['delta']);
-                            }
-                          }).forEach((element) {
-                            if (element != null && element.length > 0) {
-                              for (var element in (element as List)) {
-                                finalText.add((element['insert']));
+                          var permissionStatus =
+                              await Permission.notification.request();
+                          if (permissionStatus.isGranted) {
+                            List<String> finalText = [];
+                            editorState.document.root.children.map((e) {
+                              return e.attributes;
+                            }).map((element) {
+                              if ((element['delta'] != null)) {
+                                return (element['delta']);
                               }
+                            }).forEach((element) {
+                              if (element != null && element.length > 0) {
+                                for (var element in (element as List)) {
+                                  finalText.add((element['insert']));
+                                }
+                              }
+                            });
+                            var noteContent = finalText
+                                .join(" ")
+                                .trim()
+                                .replaceAll(RegExp(r' +'), ' ');
+                            if (titleController.text.trim().isEmpty &&
+                                noteContent.trim().isEmpty) {
+                              return;
                             }
-                          });
-                          var noteContent = finalText
-                              .join(" ")
-                              .trim()
-                              .replaceAll(RegExp(r' +'), ' ');
-                          if (titleController.text.trim().isEmpty &&
-                              noteContent.trim().isEmpty) {
-                            return;
+                            await AwesomeNotifications().createNotification(
+                              content: NotificationContent(
+                                id: 10,
+                                channelKey: 'basic_channel',
+                                title: titleController.text,
+                                body: noteContent,
+                                notificationLayout: NotificationLayout.Default,
+                                wakeUpScreen: true,
+                                category: NotificationCategory.Reminder,
+                                criticalAlert: true,
+                              ),
+                              schedule: NotificationCalendar(
+                                hour: finalDateTime.hour,
+                                minute: finalDateTime.minute,
+                                allowWhileIdle: true,
+                              ),
+                            );
                           }
-                          await AwesomeNotifications().createNotification(
-                            content: NotificationContent(
-                              id: 10,
-                              channelKey: 'basic_channel',
-                              title: titleController.text,
-                              body: noteContent,
-                              notificationLayout: NotificationLayout.Default,
-                              wakeUpScreen: true,
-                              category: NotificationCategory.Reminder,
-                              criticalAlert: true,
-                            ),
-                            schedule: NotificationCalendar(
-                              hour: finalDateTime.hour,
-                              minute: finalDateTime.minute,
-                              allowWhileIdle: true,
-                            ),
+                          finalSelectedDate = finalDateTime;
+                          _createAndEditPageVM.whenScheduled = finalDateTime;
+                          _createAndEditPageVM.saveNote(
+                            title: titleController.text,
+                            noteEditorState: editorState,
                           );
                         }
-                        finalSelectedDate = finalDateTime;
-                        _createAndEditPageVM.saveNote(
-                          title: titleController.text,
-                          noteEditorState: editorState,
-                          whenNotificationScheduled: finalDateTime,
-                        );
                       },
                       icon: const ImageIcon(
                         AssetImage(
@@ -333,7 +334,9 @@ class _CreateAndEditPageViewState extends State<CreateAndEditPageView> {
                         ),
                         // PopupMenuItem 2
                         PopupMenuItem(
-                          onTap: () {},
+                          onTap: () {
+                            _showSharePopupMenu();
+                          },
                           padding: const EdgeInsets.symmetric(horizontal: 16),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.start,
@@ -514,6 +517,161 @@ class _CreateAndEditPageViewState extends State<CreateAndEditPageView> {
     );
   }
 
+  void _showSharePopupMenu() async {
+    await showMenu(
+      context: context,
+      clipBehavior: Clip.antiAlias,
+      position: const RelativeRect.fromLTRB(100, 80, 16, 100),
+      items: [
+        PopupMenuItem(
+          onTap: () async {
+            var file = await saveDocumentToPdf(
+                appFlowyDocumentToParse: editorState.document,
+                outputFilepath:
+                    "${(await getApplicationCacheDirectory()).path}/output-temp.pdf");
+            if (file != null) {
+              await Share.shareXFiles(
+                [XFile(file.path)],
+                text: titleController.text,
+              );
+            }
+          },
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              ImageIcon(
+                color: Theme.of(context).colorScheme.onPrimaryContainer,
+                size: 18,
+                const AssetImage(
+                  "lib/resources/icons/filetype_pdf.png",
+                ),
+              ),
+              const SizedBox(
+                width: 12,
+              ),
+              Text(
+                "Share as PDF",
+                style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                      color: Theme.of(context).colorScheme.onPrimaryContainer,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 12,
+                    ),
+              ),
+            ],
+          ),
+        ),
+        PopupMenuItem(
+          onTap: () async {
+            final contentToShare = StringBuffer();
+            contentToShare.writeln("# ${titleController.text}");
+            contentToShare.writeln("");
+            contentToShare.writeln("");
+            var mdStr = documentToMarkdown(editorState.document);
+            contentToShare.writeln(mdStr);
+
+            var temp = await getTemporaryDirectory().then((value) {
+              return "${value.path}/temp.md";
+            });
+
+            var res = await File(temp).create(recursive: true);
+            final restFile =
+                await File(res.path).writeAsString(contentToShare.toString());
+
+            await Share.shareXFiles(
+              [XFile(restFile.path)],
+              text: titleController.text,
+            );
+          },
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              ImageIcon(
+                color: Theme.of(context).colorScheme.onPrimaryContainer,
+                size: 18,
+                const AssetImage(
+                  "lib/resources/icons/filetype_md.png",
+                ),
+              ),
+              const SizedBox(
+                width: 12,
+              ),
+              Text(
+                "Share as md",
+                style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                      color: Theme.of(context).colorScheme.onPrimaryContainer,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 12,
+                    ),
+              ),
+            ],
+          ),
+        ),
+        PopupMenuItem(
+          onTap: () async {
+            final contentToShare = StringBuffer();
+            contentToShare.writeln(titleController.text);
+            contentToShare.writeln("");
+            contentToShare.writeln("");
+            List<String> finalText = [];
+            editorState.document.root.children.map((e) {
+              return e.attributes;
+            }).map((element) {
+              if ((element['delta'] != null)) {
+                return (element['delta']);
+              }
+            }).forEach((element) {
+              if (element != null && element.length > 0) {
+                for (var element in (element as List)) {
+                  finalText.add((element['insert']));
+                }
+              }
+            });
+
+            var noteContent = finalText
+                .join(" ")
+                .trim()
+                .replaceAll(RegExp(r' +'), ' ')
+                .trim();
+
+            contentToShare.writeln(noteContent);
+
+            await Share.shareWithResult(
+              contentToShare.toString(),
+              subject: titleController.text,
+            );
+          },
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Icon(Icons.abc_rounded,
+                  size: 18,
+                  color: Theme.of(context).colorScheme.onPrimaryContainer),
+              const SizedBox(
+                width: 12,
+              ),
+              Text(
+                "Share as Text",
+                style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                      color: Theme.of(context).colorScheme.onPrimaryContainer,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 12,
+                    ),
+              ),
+            ],
+          ),
+        ),
+      ],
+      elevation: 10,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+    );
+  }
+
   Future<void> saveAsPdf() async {
     var result = await Permission.manageExternalStorage.request();
     if (result.isGranted) {
@@ -535,8 +693,11 @@ class _CreateAndEditPageViewState extends State<CreateAndEditPageView> {
         var outputSavedFile = File(
             "$pathtosave/output-${DateTime.now().year}-${DateTime.now().year}-${DateTime.now().day}-${DateTime.now().second}.md");
         await outputSavedFile.create(recursive: true);
-        await outputSavedFile
-            .writeAsString(documentToMarkdown(editorState.document));
+        var mdfileBuffer = StringBuffer();
+        mdfileBuffer.writeln("# ${titleController.text}");
+        mdfileBuffer.writeln("");
+        mdfileBuffer.writeln(documentToMarkdown(editorState.document));
+        await outputSavedFile.writeAsString(mdfileBuffer.toString());
       }
     }
   }
@@ -769,8 +930,7 @@ class _EditorViewState extends State<EditorView> {
                 child: Column(
                   children: [
                     Observer(builder: (context) {
-                      return widget
-                              .createAndEditPageVM.selectedImagePath.isEmpty
+                      return (widget.createAndEditPageVM.isAssestImage)
                           ? const SizedBox.shrink()
                           : ClipRRect(
                               borderRadius: BorderRadius.circular(16),
@@ -792,7 +952,7 @@ class _EditorViewState extends State<EditorView> {
                     }),
                     TextFormField(
                       controller: widget.titleController,
-                      maxLines: 2,
+                      maxLines: 5,
                       minLines: 1,
                       autofocus: true,
                       style: const TextStyle(

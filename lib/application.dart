@@ -1,4 +1,5 @@
 import 'package:appflowy_editor/appflowy_editor.dart';
+import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/material.dart';
 import 'package:notebook/pages/searchPage/searchPage.view.dart';
 
@@ -12,22 +13,34 @@ class Application extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      key: appKey,
-      debugShowCheckedModeBanner: false,
-      theme: lightTheme.copyWith(
-          pageTransitionsTheme: const PageTransitionsTheme(
-        builders: {
-          TargetPlatform.android: CustompageTransitionBuilder(),
-          TargetPlatform.iOS: CustompageTransitionBuilder(),
-        },
-      )),
-      darkTheme: darkTheme,
-      themeMode: ThemeMode.system,
-      onGenerateRoute: onGenrateRoute,
-      localizationsDelegates: const [
-        AppFlowyEditorLocalizations.delegate,
-      ],
+    return DynamicColorBuilder(
+      builder: (lightDynamic, dark) {
+        ColorScheme lightColorScheme;
+        ColorScheme darkColorScheme;
+
+        if (lightDynamic != null && dark != null) {
+          lightColorScheme = lightDynamic.harmonized();
+          darkColorScheme = dark.harmonized();
+        } else {
+          lightColorScheme = ColorScheme.fromSeed(seedColor: brandColor);
+          darkColorScheme = ColorScheme.fromSeed(
+            seedColor: brandColor,
+            brightness: Brightness.dark,
+          );
+        }
+
+        return MaterialApp(
+          key: appKey,
+          debugShowCheckedModeBanner: false,
+          theme: lightTheme.copyWith(colorScheme: lightColorScheme),
+          darkTheme: darkTheme.copyWith(colorScheme: darkColorScheme),
+          themeMode: ThemeMode.system,
+          onGenerateRoute: onGenrateRoute,
+          localizationsDelegates: const [
+            AppFlowyEditorLocalizations.delegate,
+          ],
+        );
+      },
     );
   }
 }

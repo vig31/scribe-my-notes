@@ -426,19 +426,20 @@ class Styler {
   }
 }
 
-Future<void> saveDocumentToPdf(
+Future<File?> saveDocumentToPdf(
     {required appflowy.Document appFlowyDocumentToParse,
     required String outputFilepath}) async {
   var htmldocument = parse(appflowy.documentToHTML(appFlowyDocumentToParse));
   if (htmldocument.body == null) {
-    return;
+    return null;
   }
   Chunk ch = await Styler().format(htmldocument.body!);
   var doc = pw.Document();
   doc.addPage(pw.MultiPage(build: (context) => ch.widget ?? []));
   var outputSavedFile = File(outputFilepath);
   await outputSavedFile.create(recursive: true);
-  await outputSavedFile.writeAsBytes(await doc.save());
+  var res = await outputSavedFile.writeAsBytes(await doc.save());
+  return res;
 }
 
 int randomPositiveNumberWithThreshold(int threshold) {

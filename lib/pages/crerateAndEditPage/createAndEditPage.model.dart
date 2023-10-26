@@ -21,7 +21,7 @@ abstract class _CreateAndEditPageModelBase with Store {
 
   @observable
   bool isLoading = false;
-  
+
   @observable
   bool isPinned = false;
 
@@ -35,6 +35,13 @@ abstract class _CreateAndEditPageModelBase with Store {
   bool isEdit = false;
 
   int editNoteId = -1;
+
+  String initialSelectedImagePath = "";
+
+  @observable
+  bool isAssestImage = true;
+
+  DateTime? whenScheduled;
 
   // Repos
   final IsarDBRepo dbRepo = GetIt.I.get<IsarDBRepo>();

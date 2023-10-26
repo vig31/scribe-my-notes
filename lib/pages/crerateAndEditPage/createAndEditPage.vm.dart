@@ -22,8 +22,10 @@ class CreateAndEditPageVM extends CreateAndEditPageModel {
   Future<void> init() async {
     try {
       isLoading = true;
+      isAssestImage = true;
       await fetchAllTags();
       if (isEdit) {
+        isAssestImage = false;
         await fetchEditNote();
       }
       var note = Note()
@@ -48,9 +50,11 @@ class CreateAndEditPageVM extends CreateAndEditPageModel {
         editNote = await dbRepo.isar.notes.get(editNoteId);
       });
       selectedTag = editNote?.tag.value;
-      selectedImagePath =
-          editNote!.isAssetAsCoverImage ? "" : editNote?.coverImagePath ?? "";
+      selectedImagePath = editNote!.coverImagePath;
+      initialSelectedImagePath = editNote!.coverImagePath;
       isPinned = editNote?.isPinned ?? false;
+      whenScheduled = editNote?.whenToAlert;
+      isAssestImage = editNote?.isAssetAsCoverImage ?? false;
     } catch (ex, stack) {
       CustomLogger().logFatelException(error: ex, stack: stack);
     }
@@ -83,7 +87,6 @@ class CreateAndEditPageVM extends CreateAndEditPageModel {
   Future<void> saveNote({
     required final String title,
     required final EditorState noteEditorState,
-    required final DateTime? whenNotificationScheduled,
   }) async {
     try {
       List<String> finalText = [];
@@ -102,9 +105,9 @@ class CreateAndEditPageVM extends CreateAndEditPageModel {
       });
 
       var noteContent =
-          finalText.join(" ").trim().replaceAll(RegExp(r' +'), ' ');
+          finalText.join(" ").trim().replaceAll(RegExp(r' +'), ' ').trim();
 
-      if (title.trim().isEmpty && noteContent.trim().isEmpty) {
+      if (title.trim().isEmpty && noteContent.isEmpty) {
         return;
       }
 
@@ -112,22 +115,38 @@ class CreateAndEditPageVM extends CreateAndEditPageModel {
 
       if (isEdit) {
         note = editNote!;
+        !isAssestImage
+            ? note.coverImagePath = selectedImagePath
+            : selectedImagePath == initialSelectedImagePath &&
+                    note.coverImagePath.isNotEmpty
+                ? note.coverImagePath = selectedImagePath
+                : note.coverImagePath =
+                    "lib/resources/images/ic_default_${randomPositiveNumberWithThreshold(9)}.jpg";
       } else {
         note.createdAt = DateTime.now();
+        isAssestImage &&
+                selectedImagePath == initialSelectedImagePath &&
+                selectedImagePath.isNotEmpty
+            ? note.coverImagePath = selectedImagePath
+            : note.coverImagePath =
+                "lib/resources/images/ic_default_${randomPositiveNumberWithThreshold(9)}.jpg";
       }
       note.editedAt = DateTime.now();
+      note.whenToAlert = whenScheduled;
       note.title = title;
       note.note = jsonEncode(noteEditorState.document.toJson());
       note.isPinned = isPinned;
-      selectedImagePath.isNotEmpty
-          ? note.coverImagePath = selectedImagePath
-          : note.coverImagePath =
-              "lib/resources/images/ic_default_${randomPositiveNumberWithThreshold(10)}.jpg";
-      selectedImagePath.isNotEmpty
-          ? note.isAssetAsCoverImage = false
-          : note.isAssetAsCoverImage = true;
 
-      note.whenToAlert = whenNotificationScheduled;
+      if (note.coverImagePath.contains("lib") || note.coverImagePath.isEmpty) {
+        if (note.coverImagePath.isEmpty) {
+          note.coverImagePath =
+              "lib/resources/images/ic_default_${randomPositiveNumberWithThreshold(9)}.jpg";
+        }
+
+        note.isAssetAsCoverImage = true;
+      } else {
+        note.isAssetAsCoverImage = false;
+      }
 
       note.tag.value = selectedTag;
       selectedTag != null ? await note.tag.save() : null;
@@ -148,6 +167,7 @@ class CreateAndEditPageVM extends CreateAndEditPageModel {
   Future<void> pickCoverImageFromGall() async {
     try {
       selectedImagePath = await imagePickerRepo.getImage();
+      selectedImagePath.isEmpty ? isAssestImage = true : isAssestImage = false;
     } catch (e, s) {
       CustomLogger().logFatelException(error: e, stack: s);
     }
