@@ -10,6 +10,7 @@ dependencies:
   appflowy_editor: ^1.4.4
   awesome_notifications: ^0.8.2
   cupertino_icons: ^1.0.6
+  dynamic_color: ^1.6.8
   filesystem_picker: ^3.1.0
   flutter:
     sdk: flutter
@@ -29,13 +30,16 @@ dependencies:
   logger: ^2.0.2+1
   markdown: ^7.1.1
   mobx: ^2.2.0
+  package_info: ^2.0.2
   path: ^1.8.3
   path_provider: ^2.1.1
   pdf: ^3.10.4
   permission_handler: ^11.0.1
   printing: ^5.11.0
+  share_plus: ^7.2.1
   shared_preferences: ^2.2.1
   shimmer: ^3.0.0
+  url_launcher: ^6.1.14
 
 dev_dependencies:
   flutter_test:

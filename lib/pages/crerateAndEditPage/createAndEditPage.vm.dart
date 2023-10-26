@@ -105,9 +105,9 @@ class CreateAndEditPageVM extends CreateAndEditPageModel {
       });
 
       var noteContent =
-          finalText.join(" ").trim().replaceAll(RegExp(r' +'), ' ');
+          finalText.join(" ").trim().replaceAll(RegExp(r' +'), ' ').trim();
 
-      if (title.trim().isEmpty && noteContent.trim().isEmpty) {
+      if (title.trim().isEmpty && noteContent.isEmpty) {
         return;
       }
 

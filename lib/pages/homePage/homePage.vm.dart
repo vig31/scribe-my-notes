@@ -37,7 +37,7 @@ class HomePageVM extends HomePageModel {
                     DateTime.now().day),
                 DateTime(DateTime.now().year, DateTime.now().month,
                     DateTime.now().day, 23, 59))
-            .sortByWhenToAlertDesc()
+            .sortByWhenToAlert()
             .build()
             .findAll();
 

@@ -4,15 +4,15 @@ final lightTheme = ThemeData(
   brightness: Brightness.light,
   useMaterial3: true,
   fontFamily: "Inter",
-  colorSchemeSeed: const Color(0xff3498DB),
 );
 
 final darkTheme = ThemeData(
   brightness: Brightness.dark,
   useMaterial3: true,
   fontFamily: "Inter",
-  colorSchemeSeed: const Color(0xff3498DB),
 );
+
+final brandColor = const Color(0xff3498DB);
 
 class CustompageTransitionBuilder extends PageTransitionsBuilder {
   /// Constructs a page transition animation that slides the page up.
@@ -26,7 +26,8 @@ class CustompageTransitionBuilder extends PageTransitionsBuilder {
     Animation<double>? secondaryAnimation,
     Widget child,
   ) {
-    return _CustompageTransitionBuilder(routeAnimation: animation, child: child);
+    return _CustompageTransitionBuilder(
+        routeAnimation: animation, child: child);
   }
 }
 
