@@ -1,11 +1,15 @@
 import 'package:appflowy_editor/appflowy_editor.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/material.dart';
+import 'package:notebook/pages/authFailurePage/authFailurePage.view.dart';
 import 'package:notebook/pages/searchPage/searchPage.view.dart';
 
 import 'helpers/constants.dart';
 import 'pages/crerateAndEditPage/createAndEditPage.view.dart';
+import 'pages/errorPage/errorPage.view.dart';
 import 'pages/homePage/homePage.view.dart';
+import 'pages/onBoardingPage/onBoardingPage.view.dart';
+import 'pages/splashScreen/splashScreen.view.dart';
 import 'resources/theme/theme.dart';
 
 class Application extends StatelessWidget {
@@ -51,7 +55,7 @@ Route onGenrateRoute(RouteSettings settings) {
 
   switch (routeName) {
     case '/':
-      return MaterialPageRoute(builder: (_) => const HomePageView());
+      return MaterialPageRoute(builder: (_) => const SplashScreen());
     case '/create' || "/edit":
       return MaterialPageRoute(
         builder: (_) => CreateAndEditPageView(
@@ -63,8 +67,21 @@ Route onGenrateRoute(RouteSettings settings) {
       return MaterialPageRoute(
         builder: (_) => const SearchPage(),
       );
+    case '/onBoarding':
+      return MaterialPageRoute(
+        builder: (_) => const OnBoardingPage(),
+      );
+    case '/home':
+      return MaterialPageRoute(
+        builder: (_) => const HomePageView(),
+      );
+
+    case '/authFail':
+      return MaterialPageRoute(
+        builder: (_) => const AuthFailurePage(),
+      );
     default:
       // Handle unknown routes here or return an error route
-      return MaterialPageRoute(builder: (_) => const HomePageView());
+      return MaterialPageRoute(builder: (_) => const ErrorPage());
   }
 }
