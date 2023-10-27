@@ -6,7 +6,7 @@ MobileToolbarItem customBuildTextAndBackgroundColorMobileToolbarItem({
   List<ColorOption>? backgroundColorOptions,
 }) {
   return MobileToolbarItem.withMenu(
-    itemIcon: ImageIcon(
+    itemIcon: const ImageIcon(
       AssetImage(
         "lib/resources/icons/paint.png",
       ),

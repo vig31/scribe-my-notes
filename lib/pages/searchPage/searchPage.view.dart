@@ -48,7 +48,7 @@ class _SearchPageState extends State<SearchPage> {
         ),
         keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
         children: [
-          SizedBox(height: 16,),
+          const SizedBox(height: 16,),
           SizedBox(
             height: 56,
             child: TextFormField(
@@ -83,7 +83,7 @@ class _SearchPageState extends State<SearchPage> {
             return Visibility(
               visible: _instanceOfSearchPageVM.isLoading,
               replacement: Visibility(
-                visible: _instanceOfSearchPageVM.quiredNotes.length != 0,
+                visible: _instanceOfSearchPageVM.quiredNotes.isNotEmpty,
                 replacement: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.center,
