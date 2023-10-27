@@ -932,29 +932,32 @@ class _EditorViewState extends State<EditorView> {
                     Observer(builder: (context) {
                       return (widget.createAndEditPageVM.isAssestImage)
                           ? const SizedBox.shrink()
-                          : ClipRRect(
-                              borderRadius: BorderRadius.circular(16),
-                              child: Image.file(
-                                File(widget
-                                    .createAndEditPageVM.selectedImagePath),
-                                height: 208,
-                                width: double.maxFinite,
-                                fit: BoxFit.cover,
-                                frameBuilder: (context, child, frame,
-                                    wasSynchronouslyLoaded) {
-                                  if (frame == null) {
-                                    return const LinearProgressIndicator();
-                                  }
-                                  return child;
-                                },
+                          : Container(
+                            margin: EdgeInsetsDirectional.only(top: 16),
+                            child: ClipRRect(
+                                borderRadius: BorderRadius.circular(16),
+                                child: Image.file(
+                                  File(widget
+                                      .createAndEditPageVM.selectedImagePath),
+                                  height: 208,
+                                  width: double.maxFinite,
+                                  fit: BoxFit.cover,
+                                  frameBuilder: (context, child, frame,
+                                      wasSynchronouslyLoaded) {
+                                    if (frame == null) {
+                                      return const LinearProgressIndicator();
+                                    }
+                                    return child;
+                                  },
+                                ),
                               ),
-                            );
+                          );
                     }),
                     TextFormField(
                       controller: widget.titleController,
                       maxLines: 5,
                       minLines: 1,
-                      autofocus: true,
+                      autofocus: !widget.createAndEditPageVM.isEdit,
                       style: const TextStyle(
                         fontWeight: FontWeight.w600,
                         fontSize: 18,

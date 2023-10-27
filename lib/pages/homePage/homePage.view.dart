@@ -9,6 +9,7 @@ import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:intl/intl.dart';
 import 'package:package_info/package_info.dart';
 import 'package:shimmer/shimmer.dart';
@@ -70,87 +71,96 @@ class _HomePageViewState extends State<HomePageView> {
               replacement: const Center(
                 child: CircularProgressIndicator.adaptive(),
               ),
-              child: ListView(
-                physics: const ClampingScrollPhysics(),
-                padding: const EdgeInsets.fromLTRB(0, 16, 0, 21),
-                children: [
-                  Observer(builder: (context) {
-                    return Visibility(
-                      // ignore: prefer_is_empty
-                      visible: _instanceOfVM.todaysRemainder.length != 0,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 16),
-                            child: Text(
-                              "Today's Reminders",
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 21,
+              child: Visibility(
+                visible: !(_instanceOfVM.todaysRemainder.length == 0 &&
+                    _instanceOfVM.pinnedNotes.length == 0 &&
+                    _instanceOfVM.allNotes.length == 0),
+                replacement: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SvgPicture.asset(
+                        "lib/resources/images/no_notes.svg",
+                        fit: BoxFit.cover,
+                        width: 240,
+                        height: 240,
+                      ),
+                      const SizedBox(
+                        height: 8,
+                      ),
+                      Text(
+                        "Create a New Note",
+                        style: TextStyle(
+                            fontWeight: FontWeight.w500,
+                            fontSize: 14,
+                            color: Theme.of(context).disabledColor),
+                      )
+                    ],
+                  ),
+                ),
+                child: ListView(
+                  physics: const ClampingScrollPhysics(),
+                  padding: const EdgeInsets.fromLTRB(0, 16, 0, 21),
+                  children: [
+                    Observer(builder: (context) {
+                      return Visibility(
+                        // ignore: prefer_is_empty
+                        visible: _instanceOfVM.todaysRemainder.length != 0,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 16),
+                              child: Text(
+                                "Today's Reminders",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 21,
+                                ),
                               ),
                             ),
-                          ),
-                          const SizedBox(
-                            height: 16,
-                          ),
-                          SizedBox(
-                            height: 160,
-                            child: ListView.separated(
-                              shrinkWrap: true,
-                              scrollDirection: Axis.horizontal,
-                              itemCount: _instanceOfVM.todaysRemainder.length,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                              ),
-                              itemBuilder: (context, index) {
-                                return ClipRRect(
-                                  borderRadius: BorderRadius.circular(16),
-                                  child: GestureDetector(
-                                    onTap: () async {
-                                      await Navigator.pushNamed(
-                                          context, '/edit',
-                                          arguments: {
-                                            "editNoteId": _instanceOfVM
-                                                .todaysRemainder[index].id,
-                                            "isEdit": true,
-                                          });
-                                    },
-                                    child: Stack(
-                                      children: [
-                                        Visibility(
-                                          visible: !_instanceOfVM
-                                              .todaysRemainder[index]
-                                              .isAssetAsCoverImage,
-                                          replacement: Image.asset(
-                                            width: 160,
-                                            height: 160,
-                                            filterQuality: FilterQuality.high,
-                                            fit: BoxFit.cover,
-                                            cacheHeight: 450,
-                                            cacheWidth: 450,
-                                            errorBuilder:
-                                                (context, error, stackTrace) {
-                                              return Shimmer.fromColors(
-                                                baseColor: Theme.of(context)
-                                                    .scaffoldBackgroundColor,
-                                                highlightColor:
-                                                    Theme.of(context)
-                                                        .colorScheme
-                                                        .onInverseSurface,
-                                                child: Container(
-                                                  width: 160,
-                                                  height: 160,
-                                                  color: Theme.of(context)
-                                                      .scaffoldBackgroundColor,
-                                                ),
-                                              );
-                                            },
-                                            frameBuilder: (context, child,
-                                                frame, wasSynchronouslyLoaded) {
-                                              if (frame != null) {
-                                                return child;
-                                              } else {
+                            const SizedBox(
+                              height: 16,
+                            ),
+                            SizedBox(
+                              height: 160,
+                              child: ListView.separated(
+                                shrinkWrap: true,
+                                scrollDirection: Axis.horizontal,
+                                itemCount: _instanceOfVM.todaysRemainder.length,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                ),
+                                itemBuilder: (context, index) {
+                                  return ClipRRect(
+                                    borderRadius: BorderRadius.circular(16),
+                                    child: GestureDetector(
+                                      onTap: () async {
+                                        await Navigator.pushNamed(
+                                            context, '/edit',
+                                            arguments: {
+                                              "editNoteId": _instanceOfVM
+                                                  .todaysRemainder[index].id,
+                                              "isEdit": true,
+                                            });
+                                      },
+                                      child: Stack(
+                                        children: [
+                                          Visibility(
+                                            visible: !_instanceOfVM
+                                                .todaysRemainder[index]
+                                                .isAssetAsCoverImage,
+                                            replacement: Image.asset(
+                                              width: 160,
+                                              height: 160,
+                                              filterQuality: FilterQuality.high,
+                                              fit: BoxFit.cover,
+                                              cacheHeight: 450,
+                                              cacheWidth: 450,
+                                              errorBuilder:
+                                                  (context, error, stackTrace) {
                                                 return Shimmer.fromColors(
                                                   baseColor: Theme.of(context)
                                                       .scaffoldBackgroundColor,
@@ -165,126 +175,157 @@ class _HomePageViewState extends State<HomePageView> {
                                                         .scaffoldBackgroundColor,
                                                   ),
                                                 );
-                                              }
-                                            },
-                                            _instanceOfVM.todaysRemainder[index]
-                                                .coverImagePath,
-                                          ),
-                                          child: Image.file(
-                                            fit: BoxFit.cover,
-                                            width: 160,
-                                            height: 160,
-                                            filterQuality: FilterQuality.medium,
-                                            File(
+                                              },
+                                              frameBuilder: (context,
+                                                  child,
+                                                  frame,
+                                                  wasSynchronouslyLoaded) {
+                                                if (frame != null) {
+                                                  return child;
+                                                } else {
+                                                  return Shimmer.fromColors(
+                                                    baseColor: Theme.of(context)
+                                                        .scaffoldBackgroundColor,
+                                                    highlightColor:
+                                                        Theme.of(context)
+                                                            .colorScheme
+                                                            .onInverseSurface,
+                                                    child: Container(
+                                                      width: 160,
+                                                      height: 160,
+                                                      color: Theme.of(context)
+                                                          .scaffoldBackgroundColor,
+                                                    ),
+                                                  );
+                                                }
+                                              },
                                               _instanceOfVM
                                                   .todaysRemainder[index]
                                                   .coverImagePath,
                                             ),
-                                            frameBuilder: (context, child,
-                                                frame, wasSynchronouslyLoaded) {
-                                              if (frame != null) {
-                                                return child;
-                                              } else {
-                                                return Shimmer.fromColors(
-                                                  baseColor: Theme.of(context)
-                                                      .scaffoldBackgroundColor,
-                                                  highlightColor:
-                                                      Theme.of(context)
-                                                          .colorScheme
-                                                          .onInverseSurface,
-                                                  child: Container(
-                                                    width: 160,
-                                                    height: 160,
-                                                    color: Theme.of(context)
-                                                        .scaffoldBackgroundColor,
-                                                  ),
-                                                );
-                                              }
-                                            },
-                                          ),
-                                        ),
-                                        Container(
-                                          width: 160,
-                                          decoration: BoxDecoration(
-                                            gradient: LinearGradient(
-                                              begin: Alignment.topCenter,
-                                              end: Alignment.bottomCenter,
-                                              colors: [
-                                                Colors.black.withOpacity(0.05),
-                                                Colors.black.withOpacity(0.1),
-                                                Colors.black.withOpacity(0.9)
-                                              ],
-                                            ),
-                                          ),
-                                          child: Padding(
-                                            padding: const EdgeInsets.fromLTRB(
-                                                12, 0, 12, 8),
-                                            child: Align(
-                                              alignment: Alignment.bottomLeft,
-                                              child: Text(
+                                            child: Image.file(
+                                              fit: BoxFit.cover,
+                                              width: 160,
+                                              height: 160,
+                                              filterQuality:
+                                                  FilterQuality.medium,
+                                              File(
                                                 _instanceOfVM
                                                     .todaysRemainder[index]
-                                                    .title,
-                                                maxLines: 2,
-                                                overflow: TextOverflow.ellipsis,
-                                                style: const TextStyle(
-                                                  fontWeight: FontWeight.w600,
-                                                  fontSize: 14,
-                                                  color: Colors.white,
+                                                    .coverImagePath,
+                                              ),
+                                              frameBuilder: (context,
+                                                  child,
+                                                  frame,
+                                                  wasSynchronouslyLoaded) {
+                                                if (frame != null) {
+                                                  return child;
+                                                } else {
+                                                  return Shimmer.fromColors(
+                                                    baseColor: Theme.of(context)
+                                                        .scaffoldBackgroundColor,
+                                                    highlightColor:
+                                                        Theme.of(context)
+                                                            .colorScheme
+                                                            .onInverseSurface,
+                                                    child: Container(
+                                                      width: 160,
+                                                      height: 160,
+                                                      color: Theme.of(context)
+                                                          .scaffoldBackgroundColor,
+                                                    ),
+                                                  );
+                                                }
+                                              },
+                                            ),
+                                          ),
+                                          Container(
+                                            width: 160,
+                                            decoration: BoxDecoration(
+                                              gradient: LinearGradient(
+                                                begin: Alignment.topCenter,
+                                                end: Alignment.bottomCenter,
+                                                colors: [
+                                                  Colors.black
+                                                      .withOpacity(0.05),
+                                                  Colors.black.withOpacity(0.1),
+                                                  Colors.black.withOpacity(0.9)
+                                                ],
+                                              ),
+                                            ),
+                                            child: Padding(
+                                              padding:
+                                                  const EdgeInsets.fromLTRB(
+                                                      12, 0, 12, 8),
+                                              child: Align(
+                                                alignment: Alignment.bottomLeft,
+                                                child: Text(
+                                                  _instanceOfVM
+                                                      .todaysRemainder[index]
+                                                      .title.trim().isNotEmpty ?
+                                                  _instanceOfVM
+                                                      .todaysRemainder[index]
+                                                      .title : "Untitled",
+                                                  maxLines: 2,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                  style: const TextStyle(
+                                                    fontWeight: FontWeight.w600,
+                                                    fontSize: 14,
+                                                    color: Colors.white,
+                                                  ),
                                                 ),
                                               ),
                                             ),
                                           ),
-                                        ),
-                                      ],
+                                        ],
+                                      ),
                                     ),
-                                  ),
-                                );
-                              },
-                              separatorBuilder: (context, index) {
-                                return const SizedBox(
-                                  width: 16,
-                                );
-                              },
+                                  );
+                                },
+                                separatorBuilder: (context, index) {
+                                  return const SizedBox(
+                                    width: 16,
+                                  );
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }),
+                    Observer(builder: (context) {
+                      return Visibility(
+                        visible: _instanceOfVM.pinnedNotes.length != 0,
+                        child: const SizedBox(
+                          height: 16,
+                        ),
+                      );
+                    }),
+                    Observer(builder: (context) {
+                      return Visibility(
+                        visible: _instanceOfVM.pinnedNotes.length != 0,
+                        child: const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 16),
+                          child: Text(
+                            "Pinned Notes",
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 21,
                             ),
                           ),
-                        ],
-                      ),
-                    );
-                  }),
-                  Observer(builder: (context) {
-                    return Visibility(
-                      visible: _instanceOfVM.pinnedNotes.length != 0,
-                      child: const SizedBox(
-                        height: 16,
-                      ),
-                    );
-                  }),
-                  Observer(builder: (context) {
-                    return Visibility(
-                      visible: _instanceOfVM.pinnedNotes.length != 0,
-                      child: const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 16),
-                        child: Text(
-                          "Pinned Notes",
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 21,
-                          ),
                         ),
-                      ),
-                    );
-                  }),
-                  Observer(builder: (context) {
-                    return Visibility(
-                      visible: _instanceOfVM.pinnedNotes.length != 0,
-                      child: const SizedBox(
-                        height: 16,
-                      ),
-                    );
-                  }),
-                  Observer(builder: (context) {
-                    return LayoutBuilder(builder: (context, constrain) {
+                      );
+                    }),
+                    Observer(builder: (context) {
+                      return Visibility(
+                        visible: _instanceOfVM.pinnedNotes.length != 0,
+                        child: const SizedBox(
+                          height: 16,
+                        ),
+                      );
+                    }),
+                    LayoutBuilder(builder: (context, constrain) {
                       var crossAxisCount = 2; // default mobile view
 
                       if (constrain.maxWidth > 480 &&
@@ -348,8 +389,9 @@ class _HomePageViewState extends State<HomePageView> {
                                     });
                               },
                               child: Container(
-                                padding: const EdgeInsetsDirectional.symmetric(
-                                    vertical: 16, horizontal: 12),
+                                padding:
+                                    const EdgeInsetsDirectional.symmetric(
+                                        vertical: 16, horizontal: 12),
                                 decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(16),
                                   color: Theme.of(context)
@@ -359,14 +401,18 @@ class _HomePageViewState extends State<HomePageView> {
                                 ),
                                 child: Column(
                                   mainAxisAlignment: MainAxisAlignment.start,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.start,
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     Visibility(
                                       visible: _instanceOfVM
-                                          .pinnedNotes[index].title.isNotEmpty,
+                                          .pinnedNotes[index]
+                                          .title
+                                          .isNotEmpty,
                                       child: Text(
-                                        _instanceOfVM.pinnedNotes[index].title,
+                                        _instanceOfVM
+                                            .pinnedNotes[index].title,
                                         maxLines: 3,
                                         style: const TextStyle(
                                           fontWeight: FontWeight.w600,
@@ -376,7 +422,8 @@ class _HomePageViewState extends State<HomePageView> {
                                       ),
                                     ),
                                     Visibility(
-                                      visible: !_instanceOfVM.pinnedNotes[index]
+                                      visible: !_instanceOfVM
+                                          .pinnedNotes[index]
                                           .isAssetAsCoverImage,
                                       child: Padding(
                                         padding: const EdgeInsets.symmetric(
@@ -393,8 +440,10 @@ class _HomePageViewState extends State<HomePageView> {
                                             width: double.maxFinite,
                                             filterQuality: FilterQuality.low,
                                             fit: BoxFit.cover,
-                                            frameBuilder: (context, child,
-                                                frame, wasSynchronouslyLoaded) {
+                                            frameBuilder: (context,
+                                                child,
+                                                frame,
+                                                wasSynchronouslyLoaded) {
                                               if (frame != null) {
                                                 return child;
                                               } else {
@@ -435,12 +484,12 @@ class _HomePageViewState extends State<HomePageView> {
                                                               EditorStyle
                                                                   .mobile(
                                                             padding:
-                                                                EdgeInsets.zero,
-                                                            cursorColor:
-                                                                Theme.of(
-                                                                        context)
-                                                                    .colorScheme
-                                                                    .primary,
+                                                                EdgeInsets
+                                                                    .zero,
+                                                            cursorColor: Theme
+                                                                    .of(context)
+                                                                .colorScheme
+                                                                .primary,
                                                             selectionColor: Theme
                                                                     .of(context)
                                                                 .colorScheme
@@ -488,8 +537,8 @@ class _HomePageViewState extends State<HomePageView> {
                                                   .createdAt),
                                           maxLines: 3,
                                           style: TextStyle(
-                                            color:
-                                                Theme.of(context).disabledColor,
+                                            color: Theme.of(context)
+                                                .disabledColor,
                                             fontWeight: FontWeight.w300,
                                             fontSize: 12,
                                             overflow: TextOverflow.ellipsis,
@@ -502,41 +551,39 @@ class _HomePageViewState extends State<HomePageView> {
                               ),
                             );
                           });
-                    });
-                  }),
-                  Observer(builder: (context) {
-                    return Visibility(
-                      visible: _instanceOfVM.allNotes.length != 0,
-                      child: const SizedBox(
-                        height: 16,
-                      ),
-                    );
-                  }),
-                  Observer(builder: (context) {
-                    return Visibility(
-                      visible: _instanceOfVM.allNotes.length != 0,
-                      child: const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 16),
-                        child: Text(
-                          "All Notes",
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 21,
+                    }),
+                    Observer(builder: (context) {
+                      return Visibility(
+                        visible: _instanceOfVM.allNotes.length != 0,
+                        child: const SizedBox(
+                          height: 16,
+                        ),
+                      );
+                    }),
+                    Observer(builder: (context) {
+                      return Visibility(
+                        visible: _instanceOfVM.allNotes.length != 0,
+                        child: const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 16),
+                          child: Text(
+                            "All Notes",
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 21,
+                            ),
                           ),
                         ),
-                      ),
-                    );
-                  }),
-                  Observer(builder: (context) {
-                    return Visibility(
-                      visible: _instanceOfVM.allNotes.length != 0,
-                      child: const SizedBox(
-                        height: 16,
-                      ),
-                    );
-                  }),
-                  Observer(builder: (context) {
-                    return LayoutBuilder(builder: (context, constrain) {
+                      );
+                    }),
+                    Observer(builder: (context) {
+                      return Visibility(
+                        visible: _instanceOfVM.allNotes.length != 0,
+                        child: const SizedBox(
+                          height: 16,
+                        ),
+                      );
+                    }),
+                    LayoutBuilder(builder: (context, constrain) {
                       var crossAxisCount = 2; // default mobile view
 
                       if (constrain.maxWidth > 480 &&
@@ -600,8 +647,9 @@ class _HomePageViewState extends State<HomePageView> {
                                     });
                               },
                               child: Container(
-                                padding: const EdgeInsetsDirectional.symmetric(
-                                    vertical: 16, horizontal: 12),
+                                padding:
+                                    const EdgeInsetsDirectional.symmetric(
+                                        vertical: 16, horizontal: 12),
                                 decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(16),
                                   color: Theme.of(context)
@@ -611,7 +659,8 @@ class _HomePageViewState extends State<HomePageView> {
                                 ),
                                 child: Column(
                                   mainAxisAlignment: MainAxisAlignment.start,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.start,
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     Visibility(
@@ -628,8 +677,8 @@ class _HomePageViewState extends State<HomePageView> {
                                       ),
                                     ),
                                     Visibility(
-                                      visible: !_instanceOfVM
-                                          .allNotes[index].isAssetAsCoverImage,
+                                      visible: !_instanceOfVM.allNotes[index]
+                                          .isAssetAsCoverImage,
                                       child: Padding(
                                         padding: const EdgeInsets.symmetric(
                                           vertical: 12,
@@ -646,8 +695,10 @@ class _HomePageViewState extends State<HomePageView> {
                                             width: double.maxFinite,
                                             filterQuality: FilterQuality.low,
                                             fit: BoxFit.cover,
-                                            frameBuilder: (context, child,
-                                                frame, wasSynchronouslyLoaded) {
+                                            frameBuilder: (context,
+                                                child,
+                                                frame,
+                                                wasSynchronouslyLoaded) {
                                               if (frame != null) {
                                                 return child;
                                               } else {
@@ -688,12 +739,12 @@ class _HomePageViewState extends State<HomePageView> {
                                                               EditorStyle
                                                                   .mobile(
                                                             padding:
-                                                                EdgeInsets.zero,
-                                                            cursorColor:
-                                                                Theme.of(
-                                                                        context)
-                                                                    .colorScheme
-                                                                    .primary,
+                                                                EdgeInsets
+                                                                    .zero,
+                                                            cursorColor: Theme
+                                                                    .of(context)
+                                                                .colorScheme
+                                                                .primary,
                                                             selectionColor: Theme
                                                                     .of(context)
                                                                 .colorScheme
@@ -741,8 +792,8 @@ class _HomePageViewState extends State<HomePageView> {
                                                   .allNotes[index].createdAt),
                                           maxLines: 3,
                                           style: TextStyle(
-                                            color:
-                                                Theme.of(context).disabledColor,
+                                            color: Theme.of(context)
+                                                .disabledColor,
                                             fontWeight: FontWeight.w300,
                                             fontSize: 12,
                                             overflow: TextOverflow.ellipsis,
@@ -755,9 +806,9 @@ class _HomePageViewState extends State<HomePageView> {
                               ),
                             );
                           });
-                    });
-                  }),
-                ],
+                    }),
+                  ],
+                ),
               ),
             );
           }),
