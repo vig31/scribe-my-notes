@@ -55,7 +55,7 @@ class _ListMenuState extends State<_ListMenu> {
         ),
         label: Text(
           currentList.label,
-          style: TextStyle(fontSize: 12),
+          style: const TextStyle(fontSize: 12),
         ),
         isSelected: isSelected,
         onPressed: () {

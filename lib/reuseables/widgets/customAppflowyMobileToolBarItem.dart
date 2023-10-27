@@ -145,7 +145,7 @@ class CustomMobileToolbarWidgetState extends State<CustomMobileToolbarWidget>
                    height: 32,
                 width: 32,
                 child: IconButton(
-                  constraints: BoxConstraints.tight(Size(32, 32)),
+                  constraints: BoxConstraints.tight(const Size(32, 32)),
                   padding: EdgeInsets.zero,
                   alignment: Alignment.center,
                   color: Theme.of(context).iconTheme.color,
@@ -164,7 +164,7 @@ class CustomMobileToolbarWidgetState extends State<CustomMobileToolbarWidget>
                 height: 32,
                 width: 32,
                 child: IconButton(
-                  constraints: BoxConstraints.tight(Size(32, 32)),
+                  constraints: BoxConstraints.tight(const Size(32, 32)),
                   padding: EdgeInsets.zero,
                   alignment: Alignment.center,
                   color: Theme.of(context).iconTheme.color,
@@ -216,7 +216,7 @@ class CustomMobileToolbarWidgetState extends State<CustomMobileToolbarWidget>
                   width: 32,
                   height: 32,
                   child: IconButton(
-                    constraints: BoxConstraints.tight(Size(32, 32)),
+                    constraints: BoxConstraints.tight(const Size(32, 32)),
                     padding: EdgeInsets.zero,
                     alignment: Alignment.center,
                     

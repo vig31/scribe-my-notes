@@ -12,7 +12,7 @@ final darkTheme = ThemeData(
   fontFamily: "Inter",
 );
 
-final brandColor = const Color(0xff3498DB);
+const brandColor = Color(0xff3498DB);
 
 class CustompageTransitionBuilder extends PageTransitionsBuilder {
   /// Constructs a page transition animation that slides the page up.

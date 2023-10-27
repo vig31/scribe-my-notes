@@ -72,9 +72,9 @@ class _HomePageViewState extends State<HomePageView> {
                 child: CircularProgressIndicator.adaptive(),
               ),
               child: Visibility(
-                visible: !(_instanceOfVM.todaysRemainder.length == 0 &&
-                    _instanceOfVM.pinnedNotes.length == 0 &&
-                    _instanceOfVM.allNotes.length == 0),
+                visible: !(_instanceOfVM.todaysRemainder.isEmpty &&
+                    _instanceOfVM.pinnedNotes.isEmpty &&
+                    _instanceOfVM.allNotes.isEmpty),
                 replacement: Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -296,7 +296,7 @@ class _HomePageViewState extends State<HomePageView> {
                     }),
                     Observer(builder: (context) {
                       return Visibility(
-                        visible: _instanceOfVM.pinnedNotes.length != 0,
+                        visible: _instanceOfVM.pinnedNotes.isNotEmpty,
                         child: const SizedBox(
                           height: 16,
                         ),
@@ -304,7 +304,7 @@ class _HomePageViewState extends State<HomePageView> {
                     }),
                     Observer(builder: (context) {
                       return Visibility(
-                        visible: _instanceOfVM.pinnedNotes.length != 0,
+                        visible: _instanceOfVM.pinnedNotes.isNotEmpty,
                         child: const Padding(
                           padding: EdgeInsets.symmetric(horizontal: 16),
                           child: Text(
@@ -319,7 +319,7 @@ class _HomePageViewState extends State<HomePageView> {
                     }),
                     Observer(builder: (context) {
                       return Visibility(
-                        visible: _instanceOfVM.pinnedNotes.length != 0,
+                        visible: _instanceOfVM.pinnedNotes.isNotEmpty,
                         child: const SizedBox(
                           height: 16,
                         ),
@@ -554,7 +554,7 @@ class _HomePageViewState extends State<HomePageView> {
                     }),
                     Observer(builder: (context) {
                       return Visibility(
-                        visible: _instanceOfVM.allNotes.length != 0,
+                        visible: _instanceOfVM.allNotes.isNotEmpty,
                         child: const SizedBox(
                           height: 16,
                         ),
@@ -562,7 +562,7 @@ class _HomePageViewState extends State<HomePageView> {
                     }),
                     Observer(builder: (context) {
                       return Visibility(
-                        visible: _instanceOfVM.allNotes.length != 0,
+                        visible: _instanceOfVM.allNotes.isNotEmpty,
                         child: const Padding(
                           padding: EdgeInsets.symmetric(horizontal: 16),
                           child: Text(
@@ -577,7 +577,7 @@ class _HomePageViewState extends State<HomePageView> {
                     }),
                     Observer(builder: (context) {
                       return Visibility(
-                        visible: _instanceOfVM.allNotes.length != 0,
+                        visible: _instanceOfVM.allNotes.isNotEmpty,
                         child: const SizedBox(
                           height: 16,
                         ),

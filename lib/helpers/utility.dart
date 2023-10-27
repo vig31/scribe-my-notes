@@ -1,10 +1,8 @@
-import 'dart:developer';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:html/parser.dart';
 import 'package:html/dom.dart';
 import 'package:pdf/widgets.dart' as pw;
-import 'package:markdown/markdown.dart' as md;
 import 'package:pdf/pdf.dart' as p;
 import 'package:pdf/pdf.dart';
 import 'package:http/http.dart' as http;
@@ -203,8 +201,8 @@ class Styler {
     return pw.TextSpan(children: r);
   }
 
-  pw.TextStyle? s = null;
-  pw.Divider? f = null;
+  pw.TextStyle? s;
+  pw.Divider? f;
 
   // I only implmenented necessary ones, but follow the pattern
 

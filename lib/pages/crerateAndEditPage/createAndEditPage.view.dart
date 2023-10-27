@@ -7,13 +7,10 @@ import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:filesystem_picker/filesystem_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:notebook/helpers/utility.dart';
 import 'package:notebook/pages/crerateAndEditPage/createAndEditPage.vm.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:share_plus/share_plus.dart';
-import '../../helpers/constants.dart';
-import '../../repositories/imagePickerRepo/imagePickerRepo.dart';
 import '../../reuseables/widgets/customAppflowyHeadingToolBarItem.dart';
 import '../../reuseables/widgets/customAppflowyLinkToolBarItem.dart';
 import '../../reuseables/widgets/customAppflowyListToolBarItem.dart';
@@ -933,7 +930,7 @@ class _EditorViewState extends State<EditorView> {
                       return (widget.createAndEditPageVM.isAssestImage)
                           ? const SizedBox.shrink()
                           : Container(
-                            margin: EdgeInsetsDirectional.only(top: 16),
+                            margin: const EdgeInsetsDirectional.only(top: 16),
                             child: ClipRRect(
                                 borderRadius: BorderRadius.circular(16),
                                 child: Image.file(
