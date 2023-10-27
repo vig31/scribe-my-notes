@@ -12,6 +12,7 @@ import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:intl/intl.dart';
 import 'package:package_info/package_info.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -33,6 +34,9 @@ class _HomePageViewState extends State<HomePageView> {
     super.initState();
     getAppVersion();
     _instanceOfVM.initHomePage();
+    SharedPreferences.getInstance().then((value) {
+      value.setBool("isFirstLaunch", false);
+    });
   }
 
   @override
@@ -261,11 +265,16 @@ class _HomePageViewState extends State<HomePageView> {
                                                 alignment: Alignment.bottomLeft,
                                                 child: Text(
                                                   _instanceOfVM
-                                                      .todaysRemainder[index]
-                                                      .title.trim().isNotEmpty ?
-                                                  _instanceOfVM
-                                                      .todaysRemainder[index]
-                                                      .title : "Untitled",
+                                                          .todaysRemainder[
+                                                              index]
+                                                          .title
+                                                          .trim()
+                                                          .isNotEmpty
+                                                      ? _instanceOfVM
+                                                          .todaysRemainder[
+                                                              index]
+                                                          .title
+                                                      : "Untitled",
                                                   maxLines: 2,
                                                   overflow:
                                                       TextOverflow.ellipsis,
@@ -389,9 +398,8 @@ class _HomePageViewState extends State<HomePageView> {
                                     });
                               },
                               child: Container(
-                                padding:
-                                    const EdgeInsetsDirectional.symmetric(
-                                        vertical: 16, horizontal: 12),
+                                padding: const EdgeInsetsDirectional.symmetric(
+                                    vertical: 16, horizontal: 12),
                                 decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(16),
                                   color: Theme.of(context)
@@ -401,18 +409,14 @@ class _HomePageViewState extends State<HomePageView> {
                                 ),
                                 child: Column(
                                   mainAxisAlignment: MainAxisAlignment.start,
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.start,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     Visibility(
                                       visible: _instanceOfVM
-                                          .pinnedNotes[index]
-                                          .title
-                                          .isNotEmpty,
+                                          .pinnedNotes[index].title.isNotEmpty,
                                       child: Text(
-                                        _instanceOfVM
-                                            .pinnedNotes[index].title,
+                                        _instanceOfVM.pinnedNotes[index].title,
                                         maxLines: 3,
                                         style: const TextStyle(
                                           fontWeight: FontWeight.w600,
@@ -422,8 +426,7 @@ class _HomePageViewState extends State<HomePageView> {
                                       ),
                                     ),
                                     Visibility(
-                                      visible: !_instanceOfVM
-                                          .pinnedNotes[index]
+                                      visible: !_instanceOfVM.pinnedNotes[index]
                                           .isAssetAsCoverImage,
                                       child: Padding(
                                         padding: const EdgeInsets.symmetric(
@@ -440,10 +443,8 @@ class _HomePageViewState extends State<HomePageView> {
                                             width: double.maxFinite,
                                             filterQuality: FilterQuality.low,
                                             fit: BoxFit.cover,
-                                            frameBuilder: (context,
-                                                child,
-                                                frame,
-                                                wasSynchronouslyLoaded) {
+                                            frameBuilder: (context, child,
+                                                frame, wasSynchronouslyLoaded) {
                                               if (frame != null) {
                                                 return child;
                                               } else {
@@ -484,12 +485,12 @@ class _HomePageViewState extends State<HomePageView> {
                                                               EditorStyle
                                                                   .mobile(
                                                             padding:
-                                                                EdgeInsets
-                                                                    .zero,
-                                                            cursorColor: Theme
-                                                                    .of(context)
-                                                                .colorScheme
-                                                                .primary,
+                                                                EdgeInsets.zero,
+                                                            cursorColor:
+                                                                Theme.of(
+                                                                        context)
+                                                                    .colorScheme
+                                                                    .primary,
                                                             selectionColor: Theme
                                                                     .of(context)
                                                                 .colorScheme
@@ -537,8 +538,8 @@ class _HomePageViewState extends State<HomePageView> {
                                                   .createdAt),
                                           maxLines: 3,
                                           style: TextStyle(
-                                            color: Theme.of(context)
-                                                .disabledColor,
+                                            color:
+                                                Theme.of(context).disabledColor,
                                             fontWeight: FontWeight.w300,
                                             fontSize: 12,
                                             overflow: TextOverflow.ellipsis,
@@ -647,9 +648,8 @@ class _HomePageViewState extends State<HomePageView> {
                                     });
                               },
                               child: Container(
-                                padding:
-                                    const EdgeInsetsDirectional.symmetric(
-                                        vertical: 16, horizontal: 12),
+                                padding: const EdgeInsetsDirectional.symmetric(
+                                    vertical: 16, horizontal: 12),
                                 decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(16),
                                   color: Theme.of(context)
@@ -659,8 +659,7 @@ class _HomePageViewState extends State<HomePageView> {
                                 ),
                                 child: Column(
                                   mainAxisAlignment: MainAxisAlignment.start,
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.start,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     Visibility(
@@ -677,8 +676,8 @@ class _HomePageViewState extends State<HomePageView> {
                                       ),
                                     ),
                                     Visibility(
-                                      visible: !_instanceOfVM.allNotes[index]
-                                          .isAssetAsCoverImage,
+                                      visible: !_instanceOfVM
+                                          .allNotes[index].isAssetAsCoverImage,
                                       child: Padding(
                                         padding: const EdgeInsets.symmetric(
                                           vertical: 12,
@@ -695,10 +694,8 @@ class _HomePageViewState extends State<HomePageView> {
                                             width: double.maxFinite,
                                             filterQuality: FilterQuality.low,
                                             fit: BoxFit.cover,
-                                            frameBuilder: (context,
-                                                child,
-                                                frame,
-                                                wasSynchronouslyLoaded) {
+                                            frameBuilder: (context, child,
+                                                frame, wasSynchronouslyLoaded) {
                                               if (frame != null) {
                                                 return child;
                                               } else {
@@ -739,12 +736,12 @@ class _HomePageViewState extends State<HomePageView> {
                                                               EditorStyle
                                                                   .mobile(
                                                             padding:
-                                                                EdgeInsets
-                                                                    .zero,
-                                                            cursorColor: Theme
-                                                                    .of(context)
-                                                                .colorScheme
-                                                                .primary,
+                                                                EdgeInsets.zero,
+                                                            cursorColor:
+                                                                Theme.of(
+                                                                        context)
+                                                                    .colorScheme
+                                                                    .primary,
                                                             selectionColor: Theme
                                                                     .of(context)
                                                                 .colorScheme
@@ -792,8 +789,8 @@ class _HomePageViewState extends State<HomePageView> {
                                                   .allNotes[index].createdAt),
                                           maxLines: 3,
                                           style: TextStyle(
-                                            color: Theme.of(context)
-                                                .disabledColor,
+                                            color:
+                                                Theme.of(context).disabledColor,
                                             fontWeight: FontWeight.w300,
                                             fontSize: 12,
                                             overflow: TextOverflow.ellipsis,
