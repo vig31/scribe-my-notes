@@ -525,7 +525,8 @@ class _CreateAndEditPageViewState extends State<CreateAndEditPageView> {
             var file = await saveDocumentToPdf(
                 appFlowyDocumentToParse: editorState.document,
                 outputFilepath:
-                    "${(await getApplicationCacheDirectory()).path}/output-temp.pdf");
+                    "${(await getApplicationCacheDirectory()).path}/output-temp.pdf",
+                title: titleController.text);
             if (file != null) {
               await Share.shareXFiles(
                 [XFile(file.path)],
@@ -674,10 +675,12 @@ class _CreateAndEditPageViewState extends State<CreateAndEditPageView> {
     if (result.isGranted) {
       var pathtosave = await chooseTheFolder();
       if (pathtosave.isNotEmpty) {
+        var pathToSave =
+            "$pathtosave/note-${DateTime.now().year}-${DateTime.now().year}-${DateTime.now().day}-${DateTime.now().second}.pdf";
         await saveDocumentToPdf(
             appFlowyDocumentToParse: editorState.document,
-            outputFilepath:
-                "$pathtosave/output-${DateTime.now().year}-${DateTime.now().year}-${DateTime.now().day}-${DateTime.now().second}.pdf");
+            outputFilepath: pathToSave,
+            title: titleController.text);
       }
     }
   }
@@ -789,9 +792,12 @@ class EditorView extends StatefulWidget {
 }
 
 class _EditorViewState extends State<EditorView> {
+  late final createAndEditPageVM = widget.createAndEditPageVM;
   late final editorState = widget.editorState;
 
   late Map<String, BlockComponentBuilder> _blockComponentBuilder;
+
+  final noteFieldFocusNode = FocusNode();
 
   @override
   void initState() {
@@ -845,7 +851,6 @@ class _EditorViewState extends State<EditorView> {
             editorScrollController:
                 EditorScrollController(editorState: editorState),
             items: [
-              paragraphItem,
               ...alignmentItems,
               ToolbarItem(
                 id: 'cut',
@@ -926,29 +931,91 @@ class _EditorViewState extends State<EditorView> {
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
                 child: Column(
                   children: [
-                    Observer(builder: (context) {
+                    Observer(builder: (ctx) {
                       return (widget.createAndEditPageVM.isAssestImage)
                           ? const SizedBox.shrink()
-                          : Container(
-                            margin: const EdgeInsetsDirectional.only(top: 16),
-                            child: ClipRRect(
-                                borderRadius: BorderRadius.circular(16),
-                                child: Image.file(
-                                  File(widget
-                                      .createAndEditPageVM.selectedImagePath),
-                                  height: 208,
-                                  width: double.maxFinite,
-                                  fit: BoxFit.cover,
-                                  frameBuilder: (context, child, frame,
-                                      wasSynchronouslyLoaded) {
-                                    if (frame == null) {
-                                      return const LinearProgressIndicator();
-                                    }
-                                    return child;
+                          : GestureDetector(
+                              onLongPress: () async {
+                                bool confirm = false;
+                                await showDialog<void>(
+                                  context: context,
+                                  barrierDismissible: true,
+                                  builder: (BuildContext ctx) {
+                                    return AlertDialog(
+                                      title: const Text('Confirm'),
+                                      content: const SingleChildScrollView(
+                                        child: ListBody(
+                                          children: <Widget>[
+                                            Text(
+                                                'Are you sure you want to remove this image?'),
+                                          ],
+                                        ),
+                                      ),
+                                      actions: <Widget>[
+                                        ElevatedButton(
+                                          onPressed: () {
+                                            confirm = true;
+                                            Navigator.pop(context);
+                                          },
+                                          child: const Text("Yes"),
+                                        ),
+                                        ElevatedButton(
+                                          style: ButtonStyle(
+                                            backgroundColor:
+                                                MaterialStatePropertyAll(
+                                              Theme.of(context)
+                                                  .colorScheme
+                                                  .primaryContainer,
+                                            ),
+                                          ),
+                                          onPressed: () {
+                                            Navigator.pop(context);
+                                          },
+                                          child: Text(
+                                            "No",
+                                            style: TextStyle(
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .onPrimaryContainer,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    );
                                   },
+                                );
+
+                                if (confirm) {
+                                  // remove the selected image path
+                                  createAndEditPageVM.isAssestImage = true;
+                                  createAndEditPageVM.selectedImagePath = "";
+                                }
+                              },
+                              child: Container(
+                                margin:
+                                    const EdgeInsetsDirectional.only(top: 16),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(16),
+                                  child: InteractiveViewer(
+                                    constrained: true,
+                                    child: Image.file(
+                                      File(widget.createAndEditPageVM
+                                          .selectedImagePath),
+                                      height: 208,
+                                      width: double.maxFinite,
+                                      fit: BoxFit.cover,
+                                      frameBuilder: (context, child, frame,
+                                          wasSynchronouslyLoaded) {
+                                        if (frame == null) {
+                                          return const LinearProgressIndicator();
+                                        }
+                                        return child;
+                                      },
+                                    ),
+                                  ),
                                 ),
                               ),
-                          );
+                            );
                     }),
                     TextFormField(
                       controller: widget.titleController,
@@ -1003,6 +1070,7 @@ class _EditorViewState extends State<EditorView> {
                 ),
               ),
               editorState: editorState,
+              focusNode: noteFieldFocusNode,
               editable: true,
               editorStyle: EditorStyle(
                 padding:
@@ -1053,7 +1121,7 @@ class _EditorViewState extends State<EditorView> {
             customBuildTextAndBackgroundColorMobileToolbarItem(),
             customHeadingMobileToolbarItem,
             customListMobileToolbarItem,
-            customLinkMobileToolbarItem,
+            // customLinkMobileToolbarItem,
             MobileToolbarItem.action(
               itemIcon: const ImageIcon(
                 AssetImage(

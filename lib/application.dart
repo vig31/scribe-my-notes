@@ -1,6 +1,7 @@
 import 'package:appflowy_editor/appflowy_editor.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:notebook/pages/authFailurePage/authFailurePage.view.dart';
 import 'package:notebook/pages/searchPage/searchPage.view.dart';
 
@@ -33,17 +34,26 @@ class Application extends StatelessWidget {
           );
         }
 
-        return MaterialApp(
-          key: appKey,
-          debugShowCheckedModeBanner: false,
-          theme: lightTheme.copyWith(colorScheme: lightColorScheme),
-          darkTheme: darkTheme.copyWith(colorScheme: darkColorScheme),
-          themeMode: ThemeMode.system,
-          onGenerateRoute: onGenrateRoute,
-          localizationsDelegates: const [
-            AppFlowyEditorLocalizations.delegate,
-          ],
-        );
+        return LayoutBuilder(builder: (context, constrain) {
+          //  set porait only on mobile screen
+          if (constrain.maxWidth > 480 && constrain.maxWidth < 932 ||
+              constrain.maxHeight > 480 && constrain.maxHeight < 932) {
+            SystemChrome.setPreferredOrientations(
+                [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]);
+          }
+
+          return MaterialApp(
+            key: appKey,
+            debugShowCheckedModeBanner: false,
+            theme: lightTheme.copyWith(colorScheme: lightColorScheme),
+            darkTheme: darkTheme.copyWith(colorScheme: darkColorScheme),
+            themeMode: ThemeMode.system,
+            onGenerateRoute: onGenrateRoute,
+            localizationsDelegates: const [
+              AppFlowyEditorLocalizations.delegate,
+            ],
+          );
+        });
       },
     );
   }

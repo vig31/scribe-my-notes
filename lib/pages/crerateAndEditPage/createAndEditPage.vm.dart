@@ -124,9 +124,8 @@ class CreateAndEditPageVM extends CreateAndEditPageModel {
                     "lib/resources/images/ic_default_${randomPositiveNumberWithThreshold(9)}.jpg";
       } else {
         note.createdAt = DateTime.now();
-        isAssestImage &&
-                selectedImagePath == initialSelectedImagePath &&
-                selectedImagePath.isNotEmpty
+       !( isAssestImage &&
+                selectedImagePath.isNotEmpty)
             ? note.coverImagePath = selectedImagePath
             : note.coverImagePath =
                 "lib/resources/images/ic_default_${randomPositiveNumberWithThreshold(9)}.jpg";
