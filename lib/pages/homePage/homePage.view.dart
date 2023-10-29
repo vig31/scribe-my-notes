@@ -841,15 +841,25 @@ class _HomePageViewState extends State<HomePageView> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             mainAxisSize: MainAxisSize.min,
                             children: <Widget>[
-                              const CircleAvatar(
-                                radius: 48,
-                                backgroundImage: AssetImage(
-                                    "lib/resources/images/ic_profile.png"),
+                              GestureDetector(
+                                onTap: ()async  {
+                                   await launchUrl(
+                                    Uri.parse(
+                                        "https://www.linkedin.com/in/vig31?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app"),
+                                  );
+                                },
+                                child: const CircleAvatar(
+                                  radius: 48,
+                                  backgroundImage: AssetImage(
+                                      "lib/resources/images/ic_profile.png"),
+                                ),
                               ),
                               TextButton(
                                 onPressed: () async {
-                                  await launchUrl(Uri.parse(
-                                      "https://www.linkedin.com/in/vig31?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app"));
+                                  await launchUrl(
+                                    Uri.parse(
+                                        "https://www.linkedin.com/in/vig31?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app"),
+                                  );
 
                                   Navigator.pop(context);
                                 },

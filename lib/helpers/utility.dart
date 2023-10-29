@@ -427,17 +427,25 @@ class Styler {
 
 Future<File?> saveDocumentToPdf(
     {required appflowy.Document appFlowyDocumentToParse,
-    required String outputFilepath}) async {
+    required String outputFilepath,
+    required String title}) async {
   var myTheme = pw.ThemeData.withFont(
       base: pw.Font.ttf(
           await rootBundle.load("lib/resources/fonts/Inter-Regular.ttf")),
       bold: pw.Font.ttf(
           await rootBundle.load("lib/resources/fonts/Inter-Bold.ttf")),
       fontFallback: [
-        pw.Font.ttf(
-            await rootBundle.load("lib/resources/fonts/NotoColorEmoji-Regular.ttf")),
+        pw.Font.ttf(await rootBundle
+            .load("lib/resources/fonts/NotoColorEmoji-Regular.ttf")),
       ]);
-  var htmldocument = parse(appflowy.documentToHTML(appFlowyDocumentToParse));
+
+  final bufferTosave = StringBuffer();
+  bufferTosave.writeln("# $title");
+  bufferTosave.writeln("");
+  bufferTosave.writeln(appflowy.documentToMarkdown(appFlowyDocumentToParse));
+  var newDoc = appflowy.markdownToDocument(bufferTosave.toString());
+
+  var htmldocument = parse(appflowy.documentToHTML(newDoc));
   if (htmldocument.body == null) {
     return null;
   }
