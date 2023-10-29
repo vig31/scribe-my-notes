@@ -20,6 +20,18 @@ class SearchPageVM extends SearchPageModel {
     }
   }
 
+    Future<void> subscribeToChanges() async {
+    try {
+      var changeInDb = dbRepo.isar.notes.watchLazy(fireImmediately: true);
+      changeInDb.listen((_) async {
+        await getAllQueriedNote("");
+      });
+    } catch (ex, stack) {
+      isLoading = false;
+      CustomLogger().logFatelException(error: ex, stack: stack);
+    }
+  }
+
   Future<void> getAllQueriedNote(String text) async {
     try {
       isLoading = true;

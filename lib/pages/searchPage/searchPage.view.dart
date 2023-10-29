@@ -23,6 +23,13 @@ class _SearchPageState extends State<SearchPage> {
   final _instanceOfSearchPageVM = SearchPageVM();
 
   @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    _instanceOfSearchPageVM.subscribeToChanges();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -48,7 +55,9 @@ class _SearchPageState extends State<SearchPage> {
         ),
         keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
         children: [
-          const SizedBox(height: 16,),
+          const SizedBox(
+            height: 16,
+          ),
           SizedBox(
             height: 56,
             child: TextFormField(

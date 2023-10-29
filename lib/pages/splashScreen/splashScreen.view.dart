@@ -1,4 +1,4 @@
-// ignore_for_file: camel_case_types, prefer_typing_uninitialized_variables
+// ignore_for_file: camel_case_types, prefer_typing_uninitialized_variables, use_build_context_synchronously
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -17,9 +17,8 @@ class SplashScreen extends StatefulWidget {
 class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
-    Future.delayed(Duration(milliseconds: 550), () async {
+    Future.delayed(const Duration(milliseconds: 550), () async {
       await SharedPreferences.getInstance().then((value) async {
         var res = value.getBool("isFirstLaunch");
         if (res == null || res == true) {

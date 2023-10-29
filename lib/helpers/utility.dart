@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:typed_data';
+import 'package:flutter/services.dart';
 import 'package:html/parser.dart';
 import 'package:html/dom.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -426,13 +427,30 @@ class Styler {
 
 Future<File?> saveDocumentToPdf(
     {required appflowy.Document appFlowyDocumentToParse,
-    required String outputFilepath}) async {
-  var htmldocument = parse(appflowy.documentToHTML(appFlowyDocumentToParse));
+    required String outputFilepath,
+    required String title}) async {
+  var myTheme = pw.ThemeData.withFont(
+      base: pw.Font.ttf(
+          await rootBundle.load("lib/resources/fonts/Inter-Regular.ttf")),
+      bold: pw.Font.ttf(
+          await rootBundle.load("lib/resources/fonts/Inter-Bold.ttf")),
+      fontFallback: [
+        pw.Font.ttf(await rootBundle
+            .load("lib/resources/fonts/NotoColorEmoji-Regular.ttf")),
+      ]);
+
+  final bufferTosave = StringBuffer();
+  bufferTosave.writeln("# $title");
+  bufferTosave.writeln("");
+  bufferTosave.writeln(appflowy.documentToMarkdown(appFlowyDocumentToParse));
+  var newDoc = appflowy.markdownToDocument(bufferTosave.toString());
+
+  var htmldocument = parse(appflowy.documentToHTML(newDoc));
   if (htmldocument.body == null) {
     return null;
   }
   Chunk ch = await Styler().format(htmldocument.body!);
-  var doc = pw.Document();
+  var doc = pw.Document(theme: myTheme);
   doc.addPage(pw.MultiPage(build: (context) => ch.widget ?? []));
   var outputSavedFile = File(outputFilepath);
   await outputSavedFile.create(recursive: true);
