@@ -93,3 +93,7 @@ flutter:
       fonts:
         - asset: lib/resources/fonts/SourceCodePro-Regular.ttf
           weight: 400
+    - family: NotoColorEmoji
+      fonts:
+        - asset: lib/resources/fonts/NotoColorEmoji-Regular.ttf
+          weight: 400

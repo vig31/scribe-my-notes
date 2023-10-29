@@ -674,10 +674,11 @@ class _CreateAndEditPageViewState extends State<CreateAndEditPageView> {
     if (result.isGranted) {
       var pathtosave = await chooseTheFolder();
       if (pathtosave.isNotEmpty) {
+        var pathToSave =
+            "$pathtosave/note-${DateTime.now().year}-${DateTime.now().year}-${DateTime.now().day}-${DateTime.now().second}.pdf";
         await saveDocumentToPdf(
             appFlowyDocumentToParse: editorState.document,
-            outputFilepath:
-                "$pathtosave/output-${DateTime.now().year}-${DateTime.now().year}-${DateTime.now().day}-${DateTime.now().second}.pdf");
+            outputFilepath: pathToSave);
       }
     }
   }

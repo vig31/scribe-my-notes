@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:typed_data';
+import 'package:flutter/services.dart';
 import 'package:html/parser.dart';
 import 'package:html/dom.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -427,12 +428,21 @@ class Styler {
 Future<File?> saveDocumentToPdf(
     {required appflowy.Document appFlowyDocumentToParse,
     required String outputFilepath}) async {
+  var myTheme = pw.ThemeData.withFont(
+      base: pw.Font.ttf(
+          await rootBundle.load("lib/resources/fonts/Inter-Regular.ttf")),
+      bold: pw.Font.ttf(
+          await rootBundle.load("lib/resources/fonts/Inter-Bold.ttf")),
+      fontFallback: [
+        pw.Font.ttf(
+            await rootBundle.load("lib/resources/fonts/NotoColorEmoji-Regular.ttf")),
+      ]);
   var htmldocument = parse(appflowy.documentToHTML(appFlowyDocumentToParse));
   if (htmldocument.body == null) {
     return null;
   }
   Chunk ch = await Styler().format(htmldocument.body!);
-  var doc = pw.Document();
+  var doc = pw.Document(theme: myTheme);
   doc.addPage(pw.MultiPage(build: (context) => ch.widget ?? []));
   var outputSavedFile = File(outputFilepath);
   await outputSavedFile.create(recursive: true);
