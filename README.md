@@ -5,6 +5,8 @@ ___
 
 Introducing the ultimate note-taking and reminder app, crafted with care using Flutter and shared with the world as an open-source project. We've taken the best of note-taking and reminder apps and combined them into a single, feature-rich yet user-friendly application that covers all your needs.
 
+![alt text](https://raw.githubusercontent.com/vig31/scribe-my-notes/dev/screenshots/Feature%20Graphic.png)
+
 ## Your Security is Our Priority
 Your notes often contain sensitive information, which is why we've implemented biometric authentication to keep your data secure. With this feature, you can rest easy knowing your notes are for your eyes only. All your data is encrypted and stored only on your device, ensuring the utmost privacy and security.
 
