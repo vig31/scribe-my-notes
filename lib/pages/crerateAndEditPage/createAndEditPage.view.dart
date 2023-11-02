@@ -140,6 +140,66 @@ class _CreateAndEditPageViewState extends State<CreateAndEditPageView> {
                       enableFeedback: true,
                       iconSize: 18,
                       onPressed: () async {
+                        if (await Permission.notification.isDenied) {
+                          bool confirm = false;
+                          await showDialog<void>(
+                            context: context,
+                            barrierDismissible: true,
+                            builder: (BuildContext context) {
+                              return AlertDialog(
+                                title: const Text('Confirm'),
+                                content: const SingleChildScrollView(
+                                  child: ListBody(
+                                    children: <Widget>[
+                                      Text(
+                                          'To display notifications, you must grant permission to enable notification to display.'),
+                                    ],
+                                  ),
+                                ),
+                                actions: <Widget>[
+                                  ElevatedButton(
+                                    onPressed: () {
+                                      Navigator.pop(context);
+                                    },
+                                    child: Text(
+                                      "No",
+                                      style: TextStyle(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onPrimaryContainer,
+                                      ),
+                                    ),
+                                  ),
+                                  ElevatedButton(
+                                    onPressed: () {
+                                      confirm = true;
+                                      Navigator.pop(context);
+                                    },
+                                    style: ButtonStyle(
+                                      backgroundColor: MaterialStatePropertyAll(
+                                        Theme.of(context)
+                                            .colorScheme
+                                            .primaryContainer,
+                                      ),
+                                    ),
+                                    child: const Text("Grant"),
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+                          if (!confirm) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                    "Permission denied, so we can't continue the operation."),
+                              ),
+                            );
+                            return;
+                          }
+                        }
+                        var permissionStatus =
+                            await Permission.notification.request();
                         final DateTime? pickedDate = await showDatePicker(
                             context: context,
                             initialDate: DateTime.now(),
@@ -160,8 +220,6 @@ class _CreateAndEditPageViewState extends State<CreateAndEditPageView> {
                               pickedTime!.hour,
                               pickedTime.minute);
 
-                          var permissionStatus =
-                              await Permission.notification.request();
                           if (permissionStatus.isGranted) {
                             List<String> finalText = [];
                             editorState.document.root.children.map((e) {
@@ -442,6 +500,54 @@ class _CreateAndEditPageViewState extends State<CreateAndEditPageView> {
     );
   }
 
+  Future<bool> _accessPermissionToShowFolder() async {
+    bool confirm = false;
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: true,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Confirm'),
+          content: const SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                Text(
+                    'We require authorization to access the location of your media in order to present you with choices for saving the file.'),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: Text(
+                "No",
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onPrimaryContainer,
+                ),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                confirm = true;
+                Navigator.pop(context);
+              },
+              style: ButtonStyle(
+                backgroundColor: MaterialStatePropertyAll(
+                  Theme.of(context).colorScheme.primaryContainer,
+                ),
+              ),
+              child: const Text("Grant"),
+            ),
+          ],
+        );
+      },
+    );
+
+    return confirm;
+  }
+
   void _showSavePopupMenu() async {
     await showMenu(
       context: context,
@@ -671,34 +777,60 @@ class _CreateAndEditPageViewState extends State<CreateAndEditPageView> {
   }
 
   Future<void> saveAsPdf() async {
-    var result = await Permission.manageExternalStorage.request();
-    if (result.isGranted) {
-      var pathtosave = await chooseTheFolder();
-      if (pathtosave.isNotEmpty) {
-        var pathToSave =
-            "$pathtosave/note-${DateTime.now().year}-${DateTime.now().year}-${DateTime.now().day}-${DateTime.now().second}.pdf";
-        await saveDocumentToPdf(
-            appFlowyDocumentToParse: editorState.document,
-            outputFilepath: pathToSave,
-            title: titleController.text);
+    var isGranted = await Permission.accessMediaLocation.isDenied
+        ? await _accessPermissionToShowFolder()
+        : true;
+    if (isGranted) {
+      var result = await Permission.accessMediaLocation.request();
+      if (result.isGranted) {
+        var pathtosave = await chooseTheFolder();
+        if (pathtosave.isNotEmpty) {
+          var save =
+              "$pathtosave/note-${DateTime.now().year}-${DateTime.now().year}-${DateTime.now().day}-${DateTime.now().second}.pdf";
+          await saveDocumentToPdf(
+              appFlowyDocumentToParse: editorState.document,
+              outputFilepath: save,
+              title: titleController.text);
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+              content: Text("File has been saved, successfully.")));
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text("Permission denied, so we can't continue.")));
       }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text("Permission denied, so we can't continue.")));
     }
   }
 
   Future<void> saveAsMd() async {
-    var result = await Permission.manageExternalStorage.request();
-    if (result.isGranted) {
-      var pathtosave = await chooseTheFolder();
-      if (pathtosave.isNotEmpty) {
-        var outputSavedFile = File(
-            "$pathtosave/output-${DateTime.now().year}-${DateTime.now().year}-${DateTime.now().day}-${DateTime.now().second}.md");
-        await outputSavedFile.create(recursive: true);
-        var mdfileBuffer = StringBuffer();
-        mdfileBuffer.writeln("# ${titleController.text}");
-        mdfileBuffer.writeln("");
-        mdfileBuffer.writeln(documentToMarkdown(editorState.document));
-        await outputSavedFile.writeAsString(mdfileBuffer.toString());
+    var isGranted = await Permission.accessMediaLocation.isDenied
+        ? await _accessPermissionToShowFolder()
+        : true;
+    if (isGranted) {
+      var result = await Permission.accessMediaLocation.request();
+      if (result.isGranted) {
+        var pathtosave = await chooseTheFolder();
+        if (pathtosave.isNotEmpty) {
+          var outputSavedFile = File(
+              "$pathtosave/output-${DateTime.now().year}-${DateTime.now().year}-${DateTime.now().day}-${DateTime.now().second}.md");
+          await outputSavedFile.create(recursive: true);
+          var mdfileBuffer = StringBuffer();
+          mdfileBuffer.writeln("# ${titleController.text}");
+          mdfileBuffer.writeln("");
+          mdfileBuffer.writeln(documentToMarkdown(editorState.document));
+          await outputSavedFile.writeAsString(mdfileBuffer.toString());
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+              content: Text("File has been saved, successfully.")));
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text("Permission denied, so we can't continue.")));
       }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text("Permission denied, so we can't continue.")));
     }
   }
 
@@ -709,7 +841,7 @@ class _CreateAndEditPageViewState extends State<CreateAndEditPageView> {
           rootDirectory: Directory("/storage/emulated/0"),
           fsType: FilesystemType.folder,
           requestPermission: () async =>
-              await Permission.manageExternalStorage.request().isGranted,
+              await Permission.accessMediaLocation.request().isGranted,
           pickText: 'Save file here',
           showGoUp: false,
           theme: FilesystemPickerAutoSystemTheme(
