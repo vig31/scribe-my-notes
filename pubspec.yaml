@@ -4,27 +4,27 @@ publish_to: 'none'
 version: 1.0.3+3
 
 environment:
-  sdk: '>=3.1.3 <4.0.0'
+  sdk: '>=3.2.0 <4.0.0'
 
 dependencies:
-  appflowy_editor: ^1.4.4
-  awesome_notifications: ^0.8.2
+  appflowy_editor: ^4.0.0
+  awesome_notifications: ^0.10.0
   cupertino_icons: ^1.0.6
   dots_indicator: ^3.0.0
   dynamic_color: ^1.6.8
-  filesystem_picker: ^3.1.0
+  filesystem_picker: ^4.1.0
   flutter:
     sdk: flutter
   flutter_colorpicker: ^1.0.3
   flutter_keyboard_visibility: ^5.4.1
-  flutter_localization: ^0.1.14
+  flutter_localization: ^0.2.2
   flutter_mobx: ^2.1.0
   flutter_staggered_grid_view: ^0.7.0
   flutter_svg: ^2.0.8
-  get_it: ^7.6.4
+  get_it: ^8.0.2
   html: ^0.15.4
   image_picker: ^1.0.4
-  intl: ^0.18.1
+  intl: ^0.19.0
   isar: ^3.1.0+1
   isar_flutter_libs: ^3.1.0+1
   keyboard_attachable: ^2.1.0
@@ -38,7 +38,7 @@ dependencies:
   pdf: ^3.10.4
   permission_handler: ^11.0.1
   printing: ^5.11.0
-  share_plus: ^7.2.1
+  share_plus: ^10.1.2
   shared_preferences: ^2.2.1
   shimmer: ^3.0.0
   url_launcher: ^6.1.14
@@ -46,10 +46,10 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^2.0.0
+  flutter_lints: ^5.0.0
   isar_generator: ^3.1.0+1
   build_runner: ^2.4.6
-  flutter_launcher_icons: ^0.13.1
+  flutter_launcher_icons: ^0.14.1
   rename: ^3.0.0
   mobx_codegen: ^2.4.0
 
